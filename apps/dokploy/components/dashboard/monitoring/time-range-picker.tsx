@@ -26,6 +26,7 @@ export const TimeRangePicker = ({ value, onChange }: Props) => {
 					key={range}
 					type="button"
 					onClick={() => onChange(range)}
+					aria-pressed={value === range}
 					className={cn(
 						"rounded-sm px-2.5 py-1 text-xs font-medium transition-colors",
 						value === range

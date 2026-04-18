@@ -428,9 +428,17 @@ export const fetchDeploymentMetrics = async (
 			url.searchParams.append("appName", appName);
 			url.searchParams.append("limit", "1");
 
-			const response = await fetch(url.toString(), {
-				headers: { Authorization: `Bearer ${token}` },
-			});
+			const controller = new AbortController();
+			const timeout = setTimeout(() => controller.abort(), 5_000);
+			let response: Response;
+			try {
+				response = await fetch(url.toString(), {
+					headers: { Authorization: `Bearer ${token}` },
+					signal: controller.signal,
+				});
+			} finally {
+				clearTimeout(timeout);
+			}
 
 			if (!response.ok) {
 				throw new Error(`${response.status} ${response.statusText}`);

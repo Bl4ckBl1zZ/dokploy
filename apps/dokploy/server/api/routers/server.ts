@@ -556,9 +556,24 @@ export const serverRouter = createTRPCRouter({
 			if (!endpoint) return [];
 			const url = new URL(endpoint.baseUrl);
 			url.searchParams.append("limit", input.dataPoints);
-			const response = await fetch(url.toString(), {
-				headers: { Authorization: `Bearer ${endpoint.token}` },
-			});
+			const controller = new AbortController();
+			const timeout = setTimeout(() => controller.abort(), 10_000);
+			let response: Response;
+			try {
+				response = await fetch(url.toString(), {
+					headers: { Authorization: `Bearer ${endpoint.token}` },
+					signal: controller.signal,
+				});
+			} catch (error) {
+				if ((error as Error).name === "AbortError") {
+					throw new Error(
+						"Monitoring agent did not respond within 10s. Ensure the agent is running on this server.",
+					);
+				}
+				throw error;
+			} finally {
+				clearTimeout(timeout);
+			}
 			if (!response.ok) {
 				throw new Error(
 					`Error ${response.status}: ${response.statusText}. Ensure the monitoring agent is running on this server.`,
@@ -629,6 +644,12 @@ export const serverRouter = createTRPCRouter({
 const DEV_METRICS_BASE_URL = "http://localhost:3001/metrics";
 const DEV_METRICS_TOKEN = "metrics";
 
+const isValidPort = (port: unknown): port is number =>
+	typeof port === "number" &&
+	Number.isInteger(port) &&
+	port >= 1 &&
+	port <= 65535;
+
 async function resolveMetricsEndpoint(
 	serverId: string | null,
 	ctx: { session: { activeOrganizationId: string } },
@@ -639,7 +660,8 @@ async function resolveMetricsEndpoint(
 		if (process.env.NODE_ENV !== "production") {
 			return { baseUrl: DEV_METRICS_BASE_URL, token: DEV_METRICS_TOKEN };
 		}
-		if (!config?.token || !settings?.serverIp) return null;
+		if (!config?.token || !settings?.serverIp || !isValidPort(config.port))
+			return null;
 		return {
 			baseUrl: `http://${settings.serverIp}:${config.port}/metrics`,
 			token: config.token,
@@ -654,7 +676,7 @@ async function resolveMetricsEndpoint(
 		});
 	}
 	const config = target.metricsConfig?.server;
-	if (!config?.token) return null;
+	if (!config?.token || !isValidPort(config.port)) return null;
 	return {
 		baseUrl: `http://${target.ipAddress}:${config.port}/metrics`,
 		token: config.token,

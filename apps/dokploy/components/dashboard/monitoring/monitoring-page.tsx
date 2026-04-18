@@ -12,7 +12,8 @@ const serverKey = (serverId: string | null) => serverId ?? LOCAL_KEY;
 
 export const MonitoringPage = () => {
 	const { data: remoteServers, isLoading } = api.server.all.useQuery();
-	const { data: localMeta } = api.user.getMetricsToken.useQuery();
+	const { data: localMeta, isLoading: isLocalMetaLoading } =
+		api.user.getMetricsToken.useQuery();
 
 	const fleet: FleetServer[] = useMemo(() => {
 		const localConfigured = Boolean(
@@ -40,7 +41,7 @@ export const MonitoringPage = () => {
 	const [activeServerId, setActiveServerId] = useState<string | null>(null);
 	const [range, setRange] = useState<TimeRange>("1h");
 
-	if (isLoading) {
+	if (isLoading || isLocalMetaLoading) {
 		return (
 			<div className="flex h-[40vh] items-center justify-center">
 				<Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
