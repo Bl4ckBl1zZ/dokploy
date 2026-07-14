@@ -1,3 +1,10 @@
+## [0.38.1](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.38.0...v0.38.1) (2026-07-14)
+
+
+### Bug Fixes
+
+* pre-pull Dokploy self-update image ([#28](https://github.com/Bl4ckBl1zZ/dokploy/issues/28)) ([9afea32](https://github.com/Bl4ckBl1zZ/dokploy/commit/9afea32ae7a2038251cce1293b656b05f8daa83e))
+
 # [0.38.0](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.37.1...v0.38.0) (2026-07-13)
 
 
