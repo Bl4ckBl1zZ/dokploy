@@ -15,9 +15,15 @@ interface ParsedCidr {
 }
 
 const parseIpv4 = (value: string): number => {
-	const octets = value.split(".").map(Number);
+	const octetText = value.split(".");
 	if (
-		octets.length !== 4 ||
+		octetText.length !== 4 ||
+		octetText.some((octet) => !/^(?:0|[1-9]\d{0,2})$/.test(octet))
+	) {
+		throw new Error(`Invalid IPv4 address: ${value}`);
+	}
+	const octets = octetText.map(Number);
+	if (
 		octets.some((octet) => !Number.isInteger(octet) || octet < 0 || octet > 255)
 	) {
 		throw new Error(`Invalid IPv4 address: ${value}`);
@@ -29,7 +35,13 @@ const formatIpv4 = (value: number): string =>
 	[24, 16, 8, 0].map((shift) => (value >>> shift) & 255).join(".");
 
 export const parseIpv4Cidr = (value: string): ParsedCidr => {
-	const [addressText, prefixText] = value.trim().split("/");
+	const match = value
+		.trim()
+		.match(
+			/^((?:0|[1-9]\d{0,2})(?:\.(?:0|[1-9]\d{0,2})){3})\/(0|[1-9]|[12]\d|3[0-2])$/,
+		);
+	if (!match) throw new Error(`Invalid IPv4 CIDR: ${value}`);
+	const [, addressText, prefixText] = match;
 	const prefix = Number(prefixText);
 	if (!addressText || !Number.isInteger(prefix) || prefix < 0 || prefix > 32) {
 		throw new Error(`Invalid IPv4 CIDR: ${value}`);

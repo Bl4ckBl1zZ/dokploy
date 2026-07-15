@@ -268,7 +268,7 @@ export const isolatedTailscalePaths = (
 		.update(`${organizationId}:${serverId}`)
 		.digest();
 	const id = hash.toString("hex").slice(0, 7);
-	const subnet = 4 * (1 + (hash[0] ?? 1) * 64 + ((hash[1] ?? 1) % 64));
+	const subnet = 4 * ((hash[0] ?? 0) * 64 + ((hash[1] ?? 0) % 64));
 	const third = Math.floor(subnet / 256);
 	const fourth = subnet % 256;
 	return {
@@ -561,9 +561,26 @@ export const purgeTailscaleGatewayClient = async (input: {
 		const namespace = input.networkNamespace ?? "";
 		const statePath = input.statePath ?? "";
 		const socketPath = input.socketPath ?? "";
+		const paths = isolatedTailscalePaths(input.organizationId, input.serverId);
+		const networkScript = `/usr/local/libexec/${unit.replace(/\.service$/, "")}-network`;
+		const sysctlPath = `/etc/sysctl.d/90-dokploy-tailscale-${paths.interfaceName}.conf`;
+		const forwardRuleSelector = `/comment "dokploy-${paths.interfaceName}-(out|in)"/ { print $NF }`;
+		const natRuleSelector = `/comment "dokploy-${paths.interfaceName}-nat"/ { print $NF }`;
 		await execAsyncRemote(
 			input.serverId,
-			`set +e; if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo -n"; fi; $SUDO systemctl disable --now ${quote([unit])}; $SUDO rm -f ${quote([`/etc/systemd/system/${unit}`])} ${quote([socketPath])}; $SUDO rm -rf ${quote([statePath])}; $SUDO ip netns delete ${quote([namespace])}; $SUDO systemctl daemon-reload`,
+			`set +e
+if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo -n"; fi
+$SUDO systemctl disable --now ${quote([unit])}
+for handle in $($SUDO nft -a list chain inet dokploy_tailscale forward 2>/dev/null | awk ${quote([forwardRuleSelector])}); do $SUDO nft delete rule inet dokploy_tailscale forward handle "$handle"; done
+for handle in $($SUDO nft -a list chain ip dokploy_tailscale_nat postrouting 2>/dev/null | awk ${quote([natRuleSelector])}); do $SUDO nft delete rule ip dokploy_tailscale_nat postrouting handle "$handle"; done
+if ! $SUDO nft list chain inet dokploy_tailscale forward 2>/dev/null | grep -q 'comment "dokploy-'; then $SUDO nft delete table inet dokploy_tailscale; fi
+if ! $SUDO nft list chain ip dokploy_tailscale_nat postrouting 2>/dev/null | grep -q 'comment "dokploy-'; then $SUDO nft delete table ip dokploy_tailscale_nat; fi
+$SUDO rm -f ${quote([`/etc/systemd/system/${unit}`])} ${quote([networkScript])} ${quote([sysctlPath])} ${quote([socketPath])}
+$SUDO rm -rf ${quote([statePath])}
+$SUDO ip netns delete ${quote([namespace])}
+$SUDO ip link delete ${quote([paths.hostInterface])}
+$SUDO systemctl daemon-reload
+$SUDO sysctl --system >/dev/null 2>&1`,
 		);
 		return;
 	}

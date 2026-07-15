@@ -1,5 +1,5 @@
 {
-  "id": "7efdefab-bf13-4358-a37b-4bf378720d45",
+  "id": "9b8c90a0-95f7-4717-ab52-b21aaa89a550",
   "prevId": "daaa9837-09f3-452c-b5ba-232c3d6eeca2",
   "version": "7",
   "dialect": "postgresql",
@@ -8806,6 +8806,29 @@
             }
           ],
           "isUnique": true,
+          "where": "\"tailscale_gateway\".\"serverId\" is not null",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "tailscale_gateway_org_location_panel_unique": {
+          "name": "tailscale_gateway_org_location_panel_unique",
+          "columns": [
+            {
+              "expression": "organizationId",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "location",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"tailscale_gateway\".\"serverId\" is null",
           "concurrently": false,
           "method": "btree",
           "with": {}

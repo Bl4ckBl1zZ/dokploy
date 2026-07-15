@@ -1,4 +1,4 @@
-import type { PrivateEnvironmentContext } from "../../services/tailscale/environment-template";
+import type { PrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment-template";
 import { prepareEnvironmentVariablesForShell } from "../docker/utils";
 import { getBuildAppDirectory } from "../filesystem/directory";
 import type { ApplicationNested } from ".";

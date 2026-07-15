@@ -301,7 +301,19 @@ export const ShowTailscale = () => {
 				</CardContent>
 			</Card>
 
-			{hasConfig ? (
+			{hasConfig && state.isPending ? (
+				<div className="space-y-6">
+					<Skeleton className="h-44 w-full" />
+					<Skeleton className="h-44 w-full" />
+				</div>
+			) : null}
+			{hasConfig && state.error ? (
+				<AlertBlock type="error">
+					Tailscale gateways and endpoints could not be loaded:{" "}
+					{state.error.message}
+				</AlertBlock>
+			) : null}
+			{hasConfig && state.data ? (
 				<>
 					<Card>
 						<CardHeader>
@@ -312,9 +324,7 @@ export const ShowTailscale = () => {
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-3">
-							{state.isPending ? (
-								<Skeleton className="h-20 w-full" />
-							) : state.data?.gateways.length ? (
+							{state.data?.gateways.length ? (
 								state.data.gateways.map((gateway) => (
 									<div
 										key={gateway.tailscaleGatewayId}

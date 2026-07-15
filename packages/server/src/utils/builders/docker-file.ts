@@ -1,9 +1,9 @@
+import type { PrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment-template";
 import {
 	getEnvironmentVariablesObject,
 	prepareEnvironmentVariablesForShell,
 } from "@dokploy/server/utils/docker/utils";
 import { quote } from "shell-quote";
-import type { PrivateEnvironmentContext } from "../../services/tailscale/environment-template";
 import {
 	getBuildAppDirectory,
 	getDockerContextPath,

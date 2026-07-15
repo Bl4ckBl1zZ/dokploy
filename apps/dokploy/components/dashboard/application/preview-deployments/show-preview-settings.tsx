@@ -442,12 +442,12 @@ export const ShowPreviewSettings = ({ applicationId }: Props) => {
 										<Switch
 											checked={tailscaleEnabled}
 											onCheckedChange={(checked) => {
-												setTailscaleEnabled(checked);
 												updateApplication({
 													tailscalePreviewEnabled: checked,
 													applicationId,
 												})
 													.then(() => {
+														setTailscaleEnabled(checked);
 														refetch();
 														toast.success(
 															checked

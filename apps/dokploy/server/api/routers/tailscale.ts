@@ -6,16 +6,13 @@ import {
 	apiReconcileTailscale,
 	apiUpdateTailscaleTranslatedCidr,
 	server,
-	tailscaleConfig,
 } from "@dokploy/server/db/schema";
 import { checkPermission } from "@dokploy/server/services/permission";
-import {
-	cidrsOverlap,
-	parseIpv4Cidr,
-	selectOrganizationTranslatedCidr,
-} from "@dokploy/server/services/tailscale/cidr";
 import { createTailscaleClient } from "@dokploy/server/services/tailscale/client";
-import { discoverKnownNetworkCidrs } from "@dokploy/server/services/tailscale/data-plane";
+import {
+	connectTailscaleOrganization,
+	updateTailscaleTranslatedCidr,
+} from "@dokploy/server/services/tailscale/configuration";
 import {
 	confirmTailscaleGatewayRetag,
 	disconnectTailscale,
@@ -34,12 +31,14 @@ import { and, eq } from "drizzle-orm";
 import { createTRPCRouter, protectedProcedure, withPermission } from "../trpc";
 
 const toTrpcError = (error: unknown) =>
-	new TRPCError({
-		code: "BAD_REQUEST",
-		message:
-			error instanceof Error ? error.message : "Tailscale operation failed",
-		cause: error,
-	});
+	error instanceof TRPCError
+		? error
+		: new TRPCError({
+				code: "BAD_REQUEST",
+				message:
+					error instanceof Error ? error.message : "Tailscale operation failed",
+				cause: error,
+			});
 
 export const tailscaleRouter = createTRPCRouter({
 	getConfig: withPermission("tailscale", "read").query(async ({ ctx }) => {
@@ -55,7 +54,10 @@ export const tailscaleRouter = createTRPCRouter({
 		.input(apiConnectTailscale)
 		.mutation(async ({ input }) => {
 			try {
-				return await createTailscaleClient(input).validateCredentials();
+				return await createTailscaleClient({
+					...input,
+					deviceTag: input.deviceTag ?? "tag:dokploy",
+				}).validateCredentials();
 			} catch (error) {
 				throw toTrpcError(error);
 			}
@@ -69,86 +71,8 @@ export const tailscaleRouter = createTRPCRouter({
 			await checkPermission(ctx, {
 				tailscale: [existing ? "update" : "create"],
 			});
-			if (existing && existing.tailnet !== input.tailnet) {
-				throw new TRPCError({
-					code: "PRECONDITION_FAILED",
-					message:
-						"Changing tailnets requires purging the retained Tailscale state first.",
-				});
-			}
 			try {
-				const validation =
-					await createTailscaleClient(input).validateCredentials();
-				const organizationServers = await db.query.server.findMany({
-					where: eq(server.organizationId, organizationId),
-					columns: { serverId: true },
-				});
-				const allocatedCidrs = await db.query.tailscaleConfig.findMany({
-					where: (config, { ne }) => ne(config.organizationId, organizationId),
-					columns: { translatedCidr: true },
-				});
-				const knownCidrs = await discoverKnownNetworkCidrs([
-					null,
-					...organizationServers.map((entry) => entry.serverId),
-				]);
-				knownCidrs.push(
-					...allocatedCidrs
-						.map((entry) => entry.translatedCidr)
-						.filter((entry): entry is string => Boolean(entry)),
-				);
-				const translatedCidr =
-					existing?.translatedCidr ??
-					selectOrganizationTranslatedCidr(knownCidrs, organizationId);
-				const cidrError = translatedCidr
-					? null
-					: "All managed private address pools overlap known routes or Docker networks. Set a non-conflicting translated CIDR to enable private routing.";
-				const now = new Date().toISOString();
-				if (existing) {
-					await db
-						.update(tailscaleConfig)
-						.set({
-							tailnet: input.tailnet,
-							dnsSuffix: input.dnsSuffix,
-							oauthClientId: input.oauthClientId,
-							oauthClientSecret: input.oauthClientSecret,
-							deviceTag: input.deviceTag,
-							enabled: true,
-							translatedCidr,
-							lastError: cidrError,
-							verifiedAt: now,
-							updatedAt: now,
-						})
-						.where(
-							eq(tailscaleConfig.tailscaleConfigId, existing.tailscaleConfigId),
-						);
-				} else {
-					await db.insert(tailscaleConfig).values({
-						organizationId,
-						tailnet: input.tailnet,
-						dnsSuffix: input.dnsSuffix,
-						oauthClientId: input.oauthClientId,
-						oauthClientSecret: input.oauthClientSecret,
-						deviceTag: input.deviceTag,
-						enabled: true,
-						translatedCidr,
-						lastError: cidrError,
-						verifiedAt: now,
-					});
-				}
-				const reconciliation = await reconcileTailscaleOrganization(
-					organizationId,
-				).catch(async (error) => {
-					const message =
-						error instanceof Error
-							? error.message
-							: "Initial reconciliation failed";
-					await db
-						.update(tailscaleConfig)
-						.set({ lastError: message.slice(0, 1000) })
-						.where(eq(tailscaleConfig.organizationId, organizationId));
-					return { gateways: 0, endpoints: 0, status: "degraded" as const };
-				});
-				return { ok: true, validation, reconciliation };
+				return await connectTailscaleOrganization(organizationId, input);
 			} catch (error) {
 				throw toTrpcError(error);
 			}
@@ -203,50 +127,13 @@ export const tailscaleRouter = createTRPCRouter({
 		.input(apiUpdateTailscaleTranslatedCidr)
 		.mutation(async ({ ctx, input }) => {
 			try {
-				parseIpv4Cidr(input.translatedCidr);
+				return await updateTailscaleTranslatedCidr(
+					ctx.session.activeOrganizationId,
+					input.translatedCidr,
+				);
 			} catch (error) {
 				throw toTrpcError(error);
 			}
-			const organizationServers = await db.query.server.findMany({
-				where: eq(server.organizationId, ctx.session.activeOrganizationId),
-				columns: { serverId: true },
-			});
-			const allocatedCidrs = await db.query.tailscaleConfig.findMany({
-				where: (config, { ne }) =>
-					ne(config.organizationId, ctx.session.activeOrganizationId),
-				columns: { translatedCidr: true },
-			});
-			const knownCidrs = await discoverKnownNetworkCidrs([
-				null,
-				...organizationServers.map((entry) => entry.serverId),
-			]);
-			knownCidrs.push(
-				...allocatedCidrs
-					.map((entry) => entry.translatedCidr)
-					.filter((entry): entry is string => Boolean(entry)),
-			);
-			if (
-				knownCidrs.some((known) => cidrsOverlap(input.translatedCidr, known))
-			) {
-				throw new TRPCError({
-					code: "CONFLICT",
-					message:
-						"The translated CIDR overlaps a known server route or Docker network",
-				});
-			}
-			const [updated] = await db
-				.update(tailscaleConfig)
-				.set({ translatedCidr: input.translatedCidr, lastError: null })
-				.where(
-					eq(tailscaleConfig.organizationId, ctx.session.activeOrganizationId),
-				)
-				.returning({ translatedCidr: tailscaleConfig.translatedCidr });
-			if (!updated)
-				throw new TRPCError({
-					code: "NOT_FOUND",
-					message: "Tailscale is not configured",
-				});
-			return updated;
 		}),
 
 	disconnect: withPermission("tailscale", "delete").mutation(({ ctx }) =>

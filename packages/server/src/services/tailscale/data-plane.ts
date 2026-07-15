@@ -98,7 +98,7 @@ export const attachTailscaleSourceWorkload = async (input: {
 	await run(
 		input.serverId,
 		`targets=$(docker service inspect -f '{{range .Spec.TaskTemplate.Networks}}{{println .Target}}{{end}}' ${quote([input.appName])} 2>/dev/null || true); printf '%s\n' "$targets" | grep -Fxq ${quote([networkId.stdout.trim()])} || docker service update --detach=false --network-add ${quote([network])} ${quote([input.appName])} >/dev/null`,
-	).catch(() => undefined);
+	);
 };
 
 export const ensureTailscaleSourceProxy = async (input: {

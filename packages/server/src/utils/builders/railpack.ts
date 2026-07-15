@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
+import type { PrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment-template";
 import { nanoid } from "nanoid";
 import { quote } from "shell-quote";
-import type { PrivateEnvironmentContext } from "../../services/tailscale/environment-template";
 import {
 	parseEnvironmentKeyValuePair,
 	prepareEnvironmentVariables,

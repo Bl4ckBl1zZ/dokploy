@@ -68,13 +68,6 @@ export const removePreviewDeployment = async (previewDeploymentId: string) => {
 				await removeDirectoryCode(application?.appName, application?.serverId),
 			async () =>
 				await removeTraefikConfig(application?.appName, application?.serverId),
-			async () =>
-				await db
-					.delete(previewDeployments)
-					.where(
-						eq(previewDeployments.previewDeploymentId, previewDeploymentId),
-					)
-					.returning(),
 		];
 		for (const operation of cleanupOperations) {
 			try {
@@ -82,6 +75,15 @@ export const removePreviewDeployment = async (previewDeploymentId: string) => {
 			} catch (error) {
 				console.error(error);
 			}
+		}
+		const [deleted] = await db
+			.delete(previewDeployments)
+			.where(eq(previewDeployments.previewDeploymentId, previewDeploymentId))
+			.returning({
+				previewDeploymentId: previewDeployments.previewDeploymentId,
+			});
+		if (deleted?.previewDeploymentId !== previewDeploymentId) {
+			throw new Error("Preview deployment could not be deleted");
 		}
 		void scheduleTailscaleReconciliationForResource(
 			"application",

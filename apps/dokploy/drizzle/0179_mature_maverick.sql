@@ -100,5 +100,6 @@ CREATE UNIQUE INDEX "tailscale_endpoint_owner_key_unique" ON "tailscale_endpoint
 CREATE UNIQUE INDEX "tailscale_endpoint_org_reference_unique" ON "tailscale_endpoint" USING btree ("organizationId","referenceKey");--> statement-breakpoint
 CREATE UNIQUE INDEX "tailscale_endpoint_port_endpoint_target_unique" ON "tailscale_endpoint_port" USING btree ("tailscaleEndpointId","targetPort");--> statement-breakpoint
 CREATE UNIQUE INDEX "tailscale_gateway_key_unique" ON "tailscale_gateway" USING btree ("gatewayKey");--> statement-breakpoint
-CREATE UNIQUE INDEX "tailscale_gateway_org_server_location_unique" ON "tailscale_gateway" USING btree ("organizationId","serverId","location");--> statement-breakpoint
+CREATE UNIQUE INDEX "tailscale_gateway_org_location_panel_unique" ON "tailscale_gateway" USING btree ("organizationId","location") WHERE "tailscale_gateway"."serverId" is null;--> statement-breakpoint
+CREATE UNIQUE INDEX "tailscale_gateway_org_server_location_unique" ON "tailscale_gateway" USING btree ("organizationId","serverId","location") WHERE "tailscale_gateway"."serverId" is not null;--> statement-breakpoint
 CREATE UNIQUE INDEX "tailscale_endpoint_host_unique" ON "tailscale_endpoint_host" USING btree ("tailscaleEndpointId","tailscaleGatewayId");

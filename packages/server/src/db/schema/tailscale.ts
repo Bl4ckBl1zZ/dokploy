@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
 	boolean,
 	integer,
@@ -7,6 +7,7 @@ import {
 	text,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { organization } from "./account";
@@ -123,11 +124,12 @@ export const tailscaleGateway = pgTable(
 	},
 	(table) => [
 		uniqueIndex("tailscale_gateway_key_unique").on(table.gatewayKey),
-		uniqueIndex("tailscale_gateway_org_server_location_unique").on(
-			table.organizationId,
-			table.serverId,
-			table.location,
-		),
+		uniqueIndex("tailscale_gateway_org_server_location_unique")
+			.on(table.organizationId, table.serverId, table.location)
+			.where(sql`${table.serverId} is not null`),
+		uniqueIndex("tailscale_gateway_org_location_panel_unique")
+			.on(table.organizationId, table.location)
+			.where(sql`${table.serverId} is null`),
 	],
 );
 
@@ -315,7 +317,7 @@ export const tailscaleEndpointHostRelations = relations(
 	}),
 );
 
-export const apiConnectTailscale = z.object({
+const tailscaleConfigInsertSchema = createInsertSchema(tailscaleConfig, {
 	tailnet: z.string().trim().min(1),
 	dnsSuffix: z
 		.string()
@@ -332,6 +334,14 @@ export const apiConnectTailscale = z.object({
 		.default("tag:dokploy"),
 });
 
+export const apiConnectTailscale = tailscaleConfigInsertSchema.pick({
+	tailnet: true,
+	dnsSuffix: true,
+	oauthClientId: true,
+	oauthClientSecret: true,
+	deviceTag: true,
+});
+
 export const apiInspectTailscaleGateway = z.object({
 	serverId: z.string().min(1).nullable().optional(),
 });
@@ -346,5 +356,5 @@ export const apiReconcileTailscale = z.object({
 });
 
 export const apiUpdateTailscaleTranslatedCidr = z.object({
-	translatedCidr: z.string().trim().min(1),
+	translatedCidr: z.string().trim().pipe(z.cidrv4()),
 });

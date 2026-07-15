@@ -45,6 +45,8 @@ import {
 
 const DEFAULT_NATIVE_SOCKET = "/var/run/tailscale/tailscaled.sock";
 const locks = new Map<string, Promise<unknown>>();
+const organizationLifecycleLockKey = (organizationId: string) =>
+	`reconcile:${organizationId}`;
 
 const errorMessage = (error: unknown): string =>
 	(error instanceof Error ? error.message : String(error)).slice(0, 1000);
@@ -498,60 +500,69 @@ const persistDesiredEndpoints = async (
 		typeof tailscaleEndpoint.$inferSelect & { desired: DesiredEndpoint }
 	> = [];
 	for (const endpoint of desired) {
-		let row = await db.query.tailscaleEndpoint.findFirst({
-			where: eq(tailscaleEndpoint.ownerKey, endpoint.ownerKey),
-		});
-		if (!row) {
-			[row] = await db
-				.insert(tailscaleEndpoint)
-				.values({
-					organizationId,
-					projectId: endpoint.projectId,
-					resourceType: endpoint.resourceType,
-					resourceId: endpoint.resourceId,
-					composeService: endpoint.composeService,
-					ownerKey: endpoint.ownerKey,
-					referenceKey: endpoint.referenceKey,
-					readableName: endpoint.readableName,
-					serviceName: endpoint.serviceName,
-					fqdn: endpoint.fqdn,
-					status: endpoint.status,
-					warning: endpoint.warning,
-				})
-				.returning();
-		} else {
-			[row] = await db
-				.update(tailscaleEndpoint)
-				.set({
-					projectId: endpoint.projectId,
-					referenceKey: endpoint.referenceKey,
-					status: endpoint.status === "offline" ? "offline" : "provisioning",
-					warning: endpoint.warning,
-					lastError: null,
-					updatedAt: now,
-				})
+		const row = await db.transaction(async (tx) => {
+			let persisted = await tx.query.tailscaleEndpoint.findFirst({
+				where: eq(tailscaleEndpoint.ownerKey, endpoint.ownerKey),
+			});
+			if (!persisted) {
+				[persisted] = await tx
+					.insert(tailscaleEndpoint)
+					.values({
+						organizationId,
+						projectId: endpoint.projectId,
+						resourceType: endpoint.resourceType,
+						resourceId: endpoint.resourceId,
+						composeService: endpoint.composeService,
+						ownerKey: endpoint.ownerKey,
+						referenceKey: endpoint.referenceKey,
+						readableName: endpoint.readableName,
+						serviceName: endpoint.serviceName,
+						fqdn: endpoint.fqdn,
+						status: endpoint.status,
+						warning: endpoint.warning,
+					})
+					.returning();
+			} else {
+				[persisted] = await tx
+					.update(tailscaleEndpoint)
+					.set({
+						projectId: endpoint.projectId,
+						referenceKey: endpoint.referenceKey,
+						status: endpoint.status === "offline" ? "offline" : "provisioning",
+						warning: endpoint.warning,
+						lastError: null,
+						updatedAt: now,
+					})
+					.where(
+						eq(
+							tailscaleEndpoint.tailscaleEndpointId,
+							persisted.tailscaleEndpointId,
+						),
+					)
+					.returning();
+			}
+			if (!persisted) throw new Error("Failed to persist Tailscale endpoint");
+			await tx
+				.delete(tailscaleEndpointPort)
 				.where(
-					eq(tailscaleEndpoint.tailscaleEndpointId, row.tailscaleEndpointId),
-				)
-				.returning();
-		}
-		if (!row) throw new Error("Failed to persist Tailscale endpoint");
-		await db
-			.delete(tailscaleEndpointPort)
-			.where(
-				eq(tailscaleEndpointPort.tailscaleEndpointId, row.tailscaleEndpointId),
-			);
-		if (endpoint.ports.length) {
-			await db.insert(tailscaleEndpointPort).values(
-				endpoint.ports.map((port) => ({
-					tailscaleEndpointId: row.tailscaleEndpointId,
-					targetPort: port.targetPort,
-					scheme: port.scheme,
-					secret: port.secret ?? false,
-					composeService: port.composeService,
-				})),
-			);
-		}
+					eq(
+						tailscaleEndpointPort.tailscaleEndpointId,
+						persisted.tailscaleEndpointId,
+					),
+				);
+			if (endpoint.ports.length) {
+				await tx.insert(tailscaleEndpointPort).values(
+					endpoint.ports.map((port) => ({
+						tailscaleEndpointId: persisted.tailscaleEndpointId,
+						targetPort: port.targetPort,
+						scheme: port.scheme,
+						secret: port.secret ?? false,
+						composeService: port.composeService,
+					})),
+				);
+			}
+			return persisted;
+		});
 		rows.push({ ...row, desired: endpoint });
 	}
 	return rows;
@@ -564,6 +575,7 @@ const reconcileGatewayEndpoints = async (input: {
 		typeof tailscaleEndpoint.$inferSelect & { desired: DesiredEndpoint }
 	>;
 	config: NonNullable<Awaited<ReturnType<typeof findTailscaleConfigForOrg>>>;
+	replaceAllManagedServices: boolean;
 }) => {
 	const gateway = await db.query.tailscaleGateway.findFirst({
 		where: eq(
@@ -571,7 +583,9 @@ const reconcileGatewayEndpoints = async (input: {
 			gatewayKey(input.organizationId, input.serverId),
 		),
 	});
-	if (!gateway || gateway.status !== "ready" || !gateway.deviceId) return;
+	if (!gateway || gateway.status !== "ready" || !gateway.deviceId) {
+		return { failed: input.rows.length > 0 };
+	}
 	const client = createTailscaleClient(input.config);
 	const inspection = input.serverId
 		? await inspectTailscaleClient(
@@ -589,14 +603,21 @@ const reconcileGatewayEndpoints = async (input: {
 	};
 	serveConfig.version ??= "0.0.1";
 	serveConfig.services ??= {};
-	for (const name of Object.keys(serveConfig.services)) {
-		if (name.startsWith("svc:dokploy-")) delete serveConfig.services[name];
+	if (input.replaceAllManagedServices) {
+		for (const name of Object.keys(serveConfig.services)) {
+			if (name.startsWith("svc:dokploy-")) delete serveConfig.services[name];
+		}
 	}
+	const failedEndpointIds = new Set<string>();
 
 	for (const row of input.rows) {
 		const desired = row.desired;
+		const previousService = serveConfig.services[row.serviceName];
 		try {
-			if (!desired.ports.length) continue;
+			if (!desired.ports.length) {
+				delete serveConfig.services[row.serviceName];
+				continue;
+			}
 			const proxies = await ensureTailscaleEndpointProxies({
 				organizationId: input.organizationId,
 				serverId: input.serverId,
@@ -669,6 +690,12 @@ const reconcileGatewayEndpoints = async (input: {
 					);
 			}
 		} catch (error) {
+			failedEndpointIds.add(row.tailscaleEndpointId);
+			if (input.replaceAllManagedServices || previousService === undefined) {
+				delete serveConfig.services[row.serviceName];
+			} else {
+				serveConfig.services[row.serviceName] = previousService;
+			}
 			const message = errorMessage(error);
 			await db
 				.update(tailscaleEndpoint)
@@ -694,6 +721,7 @@ const reconcileGatewayEndpoints = async (input: {
 
 	for (const row of input.rows) {
 		if (!row.desired.ports.length) continue;
+		if (failedEndpointIds.has(row.tailscaleEndpointId)) continue;
 		try {
 			if (input.serverId) {
 				await advertiseTailscaleService({
@@ -746,6 +774,7 @@ const reconcileGatewayEndpoints = async (input: {
 					),
 			]);
 		} catch (error) {
+			failedEndpointIds.add(row.tailscaleEndpointId);
 			const message = errorMessage(error);
 			await db
 				.update(tailscaleEndpoint)
@@ -755,13 +784,14 @@ const reconcileGatewayEndpoints = async (input: {
 				);
 		}
 	}
+	return { failed: failedEndpointIds.size > 0 };
 };
 
 export const reconcileTailscaleOrganization = async (
 	organizationId: string,
 	filter?: { serverId?: string | null; tailscaleEndpointId?: string },
 ) =>
-	withLock(`reconcile:${organizationId}`, async () => {
+	withLock(organizationLifecycleLockKey(organizationId), async () => {
 		const config = await findTailscaleConfigForOrg(organizationId);
 		if (!config)
 			return { gateways: 0, endpoints: 0, status: "disabled" as const };
@@ -822,10 +852,14 @@ export const reconcileTailscaleOrganization = async (
 			filter && "serverId" in filter
 				? [filter.serverId ?? null]
 				: [null, ...servers.map((row) => row.serverId)];
+		let hasFailures = false;
 		for (const id of requestedGatewayIds) {
-			await provisionTailscaleGateway(organizationId, id).catch(
-				() => undefined,
-			);
+			try {
+				const provisioned = await provisionTailscaleGateway(organizationId, id);
+				if (!provisioned || provisioned.status !== "ready") hasFailures = true;
+			} catch {
+				hasFailures = true;
+			}
 		}
 
 		for (const id of requestedGatewayIds) {
@@ -835,12 +869,17 @@ export const reconcileTailscaleOrganization = async (
 					(row) => row.tailscaleEndpointId === filter.tailscaleEndpointId,
 				);
 			}
-			await reconcileGatewayEndpoints({
-				organizationId,
-				serverId: id,
-				rows,
-				config,
-			}).catch(async (error) => {
+			try {
+				const result = await reconcileGatewayEndpoints({
+					organizationId,
+					serverId: id,
+					rows,
+					config,
+					replaceAllManagedServices: !filter?.tailscaleEndpointId,
+				});
+				if (result.failed) hasFailures = true;
+			} catch (error) {
+				hasFailures = true;
 				const message = errorMessage(error);
 				if (rows.length) {
 					await db
@@ -853,22 +892,28 @@ export const reconcileTailscaleOrganization = async (
 							),
 						);
 				}
-			});
+			}
 		}
 
 		const consumableEndpoints = await Promise.all(
 			persisted
 				.filter((row) => row.desired.ports.length > 0)
-				.map(async (row) => ({
-					row,
-					service: await client.getService(row.serviceName).catch(() => null),
-				})),
+				.map(async (row) => {
+					const service = await client.getService(row.serviceName).catch(() => {
+						hasFailures = true;
+						return null;
+					});
+					return { row, service };
+				}),
 		);
 		for (const id of requestedGatewayIds) {
 			const gateway = await db.query.tailscaleGateway.findFirst({
 				where: eq(tailscaleGateway.gatewayKey, gatewayKey(organizationId, id)),
 			});
-			if (!gateway || gateway.status !== "ready") continue;
+			if (!gateway || gateway.status !== "ready") {
+				hasFailures = true;
+				continue;
+			}
 			try {
 				await ensureTailscaleOrganizationNetwork({
 					organizationId,
@@ -926,6 +971,7 @@ export const reconcileTailscaleOrganization = async (
 					}
 				}
 			} catch (error) {
+				hasFailures = true;
 				await db
 					.update(tailscaleGateway)
 					.set({
@@ -941,62 +987,63 @@ export const reconcileTailscaleOrganization = async (
 		return {
 			gateways: requestedGatewayIds.length,
 			endpoints: persisted.length,
-			status: "ready" as const,
+			status: hasFailures ? ("degraded" as const) : ("ready" as const),
 		};
 	});
 
-export const disconnectTailscale = async (organizationId: string) => {
-	const state = await listTailscaleState(organizationId);
-	for (const endpoint of state.endpoints) {
-		for (const host of endpoint.hosts) {
-			if (host.gateway.serverId) {
-				await advertiseTailscaleService({
-					serverId: host.gateway.serverId,
-					socketPath: host.gateway.socketPath ?? DEFAULT_NATIVE_SOCKET,
-					serviceName: endpoint.serviceName,
-					drain: true,
-				}).catch(() => undefined);
-			} else {
-				await advertisePanelTailscaleService({
-					organizationId,
-					serviceName: endpoint.serviceName,
-					drain: true,
-				}).catch(() => undefined);
+export const disconnectTailscale = async (organizationId: string) =>
+	withLock(organizationLifecycleLockKey(organizationId), async () => {
+		const state = await listTailscaleState(organizationId);
+		for (const endpoint of state.endpoints) {
+			for (const host of endpoint.hosts) {
+				if (host.gateway.serverId) {
+					await advertiseTailscaleService({
+						serverId: host.gateway.serverId,
+						socketPath: host.gateway.socketPath ?? DEFAULT_NATIVE_SOCKET,
+						serviceName: endpoint.serviceName,
+						drain: true,
+					}).catch(() => undefined);
+				} else {
+					await advertisePanelTailscaleService({
+						organizationId,
+						serviceName: endpoint.serviceName,
+						drain: true,
+					}).catch(() => undefined);
+				}
+			}
+			for (const gateway of state.gateways) {
+				await removeTailscaleEndpointProxies({
+					serverId: gateway.serverId,
+					endpointId: endpoint.tailscaleEndpointId,
+				});
 			}
 		}
 		for (const gateway of state.gateways) {
-			await removeTailscaleEndpointProxies({
+			await purgeTailscaleOrganizationNetwork({
+				organizationId,
 				serverId: gateway.serverId,
-				endpointId: endpoint.tailscaleEndpointId,
 			});
 		}
-	}
-	for (const gateway of state.gateways) {
-		await purgeTailscaleOrganizationNetwork({
-			organizationId,
-			serverId: gateway.serverId,
-		});
-	}
-	await db
-		.update(tailscaleConfig)
-		.set({
-			enabled: false,
-			oauthClientSecret: "",
-			updatedAt: new Date().toISOString(),
-		})
-		.where(eq(tailscaleConfig.organizationId, organizationId));
-	await Promise.all([
-		db
-			.update(tailscaleGateway)
-			.set({ status: "disabled" })
-			.where(eq(tailscaleGateway.organizationId, organizationId)),
-		db
-			.update(tailscaleEndpoint)
-			.set({ status: "disabled" })
-			.where(eq(tailscaleEndpoint.organizationId, organizationId)),
-	]);
-	return { ok: true };
-};
+		await db
+			.update(tailscaleConfig)
+			.set({
+				enabled: false,
+				oauthClientSecret: "",
+				updatedAt: new Date().toISOString(),
+			})
+			.where(eq(tailscaleConfig.organizationId, organizationId));
+		await Promise.all([
+			db
+				.update(tailscaleGateway)
+				.set({ status: "disabled" })
+				.where(eq(tailscaleGateway.organizationId, organizationId)),
+			db
+				.update(tailscaleEndpoint)
+				.set({ status: "disabled" })
+				.where(eq(tailscaleEndpoint.organizationId, organizationId)),
+		]);
+		return { ok: true };
+	});
 
 export const listTailscaleState = async (organizationId: string) => {
 	const [gateways, endpoints] = await Promise.all([
@@ -1013,7 +1060,7 @@ export const listTailscaleState = async (organizationId: string) => {
 };
 
 export const purgeTailscale = async (organizationId: string) =>
-	withLock(`purge:${organizationId}`, async () => {
+	withLock(organizationLifecycleLockKey(organizationId), async () => {
 		const config = await findTailscaleConfigForOrg(organizationId);
 		const { gateways, endpoints } = await listTailscaleState(organizationId);
 		const client =
@@ -1110,59 +1157,62 @@ export const purgeTailscale = async (organizationId: string) =>
 export const removeTailscaleServer = async (
 	organizationId: string,
 	serverId: string,
-) => {
-	const gateway = await db.query.tailscaleGateway.findFirst({
-		where: and(
-			eq(tailscaleGateway.organizationId, organizationId),
-			eq(tailscaleGateway.serverId, serverId),
-		),
-	});
-	if (!gateway) return { removed: false };
-	const hostedEndpoints = await db.query.tailscaleEndpointHost.findMany({
-		where: eq(
-			tailscaleEndpointHost.tailscaleGatewayId,
-			gateway.tailscaleGatewayId,
-		),
-		with: { endpoint: true },
-	});
-	for (const host of hostedEndpoints) {
-		await advertiseTailscaleService({
-			serverId,
-			socketPath: gateway.socketPath ?? DEFAULT_NATIVE_SOCKET,
-			serviceName: host.endpoint.serviceName,
-			drain: true,
-		}).catch(() => undefined);
-		await removeTailscaleEndpointProxies({
-			serverId,
-			endpointId: host.endpoint.tailscaleEndpointId,
+) =>
+	withLock(organizationLifecycleLockKey(organizationId), async () => {
+		const gateway = await db.query.tailscaleGateway.findFirst({
+			where: and(
+				eq(tailscaleGateway.organizationId, organizationId),
+				eq(tailscaleGateway.serverId, serverId),
+			),
 		});
-	}
-	const config = await findTailscaleConfigForOrg(organizationId);
-	if (
-		config?.oauthClientSecret &&
-		gateway.deviceId &&
-		gateway.ownership !== "adopted" &&
-		gateway.ownership !== "pending_retag"
-	) {
-		await createTailscaleClient(config)
-			.deleteDevice(gateway.deviceId)
-			.catch(() => undefined);
-	}
-	await purgeTailscaleGatewayClient({
-		organizationId,
-		serverId,
-		ownership: gateway.ownership,
-		unitName: gateway.unitName,
-		networkNamespace: gateway.networkNamespace,
-		statePath: gateway.statePath,
-		socketPath: gateway.socketPath,
-	}).catch(() => undefined);
-	await purgeTailscaleOrganizationNetwork({
-		organizationId,
-		serverId,
+		if (!gateway) return { removed: false };
+		const hostedEndpoints = await db.query.tailscaleEndpointHost.findMany({
+			where: eq(
+				tailscaleEndpointHost.tailscaleGatewayId,
+				gateway.tailscaleGatewayId,
+			),
+			with: { endpoint: true },
+		});
+		for (const host of hostedEndpoints) {
+			await advertiseTailscaleService({
+				serverId,
+				socketPath: gateway.socketPath ?? DEFAULT_NATIVE_SOCKET,
+				serviceName: host.endpoint.serviceName,
+				drain: true,
+			}).catch(() => undefined);
+			await removeTailscaleEndpointProxies({
+				serverId,
+				endpointId: host.endpoint.tailscaleEndpointId,
+			});
+		}
+		const config = await findTailscaleConfigForOrg(organizationId);
+		if (
+			config?.oauthClientSecret &&
+			gateway.deviceId &&
+			gateway.ownership !== "adopted" &&
+			gateway.ownership !== "pending_retag"
+		) {
+			await createTailscaleClient(config)
+				.deleteDevice(gateway.deviceId)
+				.catch(() => undefined);
+		}
+		await purgeTailscaleGatewayClient({
+			organizationId,
+			serverId,
+			ownership: gateway.ownership,
+			unitName: gateway.unitName,
+			networkNamespace: gateway.networkNamespace,
+			statePath: gateway.statePath,
+			socketPath: gateway.socketPath,
+		}).catch(() => undefined);
+		await purgeTailscaleOrganizationNetwork({
+			organizationId,
+			serverId,
+		});
+		await db
+			.delete(tailscaleGateway)
+			.where(
+				eq(tailscaleGateway.tailscaleGatewayId, gateway.tailscaleGatewayId),
+			);
+		return { removed: true };
 	});
-	await db
-		.delete(tailscaleGateway)
-		.where(eq(tailscaleGateway.tailscaleGatewayId, gateway.tailscaleGatewayId));
-	return { removed: true };
-};

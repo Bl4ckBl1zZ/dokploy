@@ -1,6 +1,7 @@
 import {
 	allocateTranslatedIp,
 	cidrsOverlap,
+	parseIpv4Cidr,
 	selectOrganizationTranslatedCidr,
 	selectTranslatedCidr,
 } from "@dokploy/server/services/tailscale/cidr";
@@ -97,9 +98,9 @@ describe("Tailscale port discovery", () => {
 		expect(discoverDatabasePorts("postgres")).toEqual([
 			{ targetPort: 5432, scheme: "postgres", secret: true },
 		]);
-		expect(discoverDatabasePorts("libsql").map((port) => port.targetPort)).toEqual([
-			8080, 5001,
-		]);
+		expect(
+			discoverDatabasePorts("libsql").map((port) => port.targetPort),
+		).toEqual([8080, 5001]);
 	});
 });
 
@@ -182,8 +183,25 @@ describe("Tailscale CIDR and client adoption matrix", () => {
 		);
 		expect(first).toMatch(/\/24$/);
 		expect(second).not.toBe(first);
-		const address = allocateTranslatedIp(first ?? "10.240.0.0/24", "endpoint", new Set());
+		const address = allocateTranslatedIp(
+			first ?? "10.240.0.0/24",
+			"endpoint",
+			new Set(),
+		);
 		expect(address).not.toMatch(/\.0$|\.255$/);
+	});
+
+	it("rejects ambiguous or malformed IPv4 CIDRs", () => {
+		expect(parseIpv4Cidr("1.2.3.4/24").network).toBeDefined();
+		for (const malformed of [
+			"1..3.4/24",
+			"1e2.2.3.4/24",
+			"0x10.2.3.4/24",
+			"01.2.3.4/24",
+			"1.2.3.4/24/extra",
+		]) {
+			expect(() => parseIpv4Cidr(malformed)).toThrow("Invalid IPv4 CIDR");
+		}
 	});
 
 	it("adopts, requests retag, preserves another tailnet, and rejects old custom clients", () => {
@@ -246,5 +264,11 @@ describe("Tailscale CIDR and client adoption matrix", () => {
 		const inspection = tailscaleInspectionScript();
 		expect(inspection).toContain("serve get-config --all");
 		expect(inspection).not.toContain("tailscale up --reset");
+	});
+
+	it("keeps the final isolated /30 inside the link-local address space", () => {
+		const paths = isolatedTailscalePaths("org", "26156");
+		expect(paths.hostAddress).toBe("169.254.255.253");
+		expect(paths.namespaceAddress).toBe("169.254.255.254");
 	});
 });

@@ -1,5 +1,5 @@
 import { dirname, join } from "node:path";
-import type { PrivateEnvironmentContext } from "../../services/tailscale/environment-template";
+import type { PrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment-template";
 import { encodeBase64, prepareEnvironmentVariables } from "../docker/utils";
 
 export const createEnvFileCommand = (
