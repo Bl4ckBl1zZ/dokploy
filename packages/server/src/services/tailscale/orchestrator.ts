@@ -1079,7 +1079,9 @@ export const reconcileTailscaleOrganization = async (
 					);
 			}
 		}
-		if (!hasFailures && config.lastError) {
+		// A completed reconciliation records current failures on gateways and
+		// endpoints, so an older configuration-level failure is no longer current.
+		if (config.translatedCidr && config.lastError) {
 			await db
 				.update(tailscaleConfig)
 				.set({ lastError: null, updatedAt: new Date().toISOString() })
