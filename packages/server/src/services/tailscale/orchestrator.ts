@@ -368,25 +368,120 @@ export const confirmTailscaleGatewayRetag = async (
 export const collectTailscaleResources = async (
 	organizationId: string,
 ): Promise<DesiredResource[]> => {
+	// Keep nested rows below PostgreSQL's 100-argument function limit. Drizzle
+	// serializes relational results with json_build_array, one argument per column.
 	const projects = await db.query.projects.findMany({
 		where: (project, { eq }) => eq(project.organizationId, organizationId),
+		columns: {
+			projectId: true,
+			name: true,
+		},
 		with: {
 			environments: {
+				columns: {
+					name: true,
+				},
 				with: {
 					applications: {
+						columns: {
+							applicationId: true,
+							name: true,
+							appName: true,
+							serverId: true,
+							applicationStatus: true,
+							tailscalePreviewEnabled: true,
+							previewPort: true,
+						},
 						with: {
-							ports: true,
-							domains: true,
-							previewDeployments: { with: { domain: true } },
+							ports: {
+								columns: { targetPort: true, protocol: true },
+							},
+							domains: {
+								columns: { port: true, https: true },
+							},
+							previewDeployments: {
+								columns: {
+									previewDeploymentId: true,
+									appName: true,
+									previewStatus: true,
+								},
+								with: {
+									domain: { columns: { port: true } },
+								},
+							},
 						},
 					},
-					compose: { with: { domains: true } },
-					postgres: true,
-					mysql: true,
-					mariadb: true,
-					mongo: true,
-					redis: true,
-					libsql: true,
+					compose: {
+						columns: {
+							composeId: true,
+							name: true,
+							appName: true,
+							serverId: true,
+							composeStatus: true,
+							composeFile: true,
+							composeType: true,
+							isolatedDeployment: true,
+						},
+						with: {
+							domains: {
+								columns: { serviceName: true, port: true, https: true },
+							},
+						},
+					},
+					postgres: {
+						columns: {
+							postgresId: true,
+							name: true,
+							appName: true,
+							serverId: true,
+							applicationStatus: true,
+						},
+					},
+					mysql: {
+						columns: {
+							mysqlId: true,
+							name: true,
+							appName: true,
+							serverId: true,
+							applicationStatus: true,
+						},
+					},
+					mariadb: {
+						columns: {
+							mariadbId: true,
+							name: true,
+							appName: true,
+							serverId: true,
+							applicationStatus: true,
+						},
+					},
+					mongo: {
+						columns: {
+							mongoId: true,
+							name: true,
+							appName: true,
+							serverId: true,
+							applicationStatus: true,
+						},
+					},
+					redis: {
+						columns: {
+							redisId: true,
+							name: true,
+							appName: true,
+							serverId: true,
+							applicationStatus: true,
+						},
+					},
+					libsql: {
+						columns: {
+							libsqlId: true,
+							name: true,
+							appName: true,
+							serverId: true,
+							applicationStatus: true,
+						},
+					},
 				},
 			},
 		},
@@ -984,6 +1079,13 @@ export const reconcileTailscaleOrganization = async (
 					);
 			}
 		}
+		if (!hasFailures && config.lastError) {
+			await db
+				.update(tailscaleConfig)
+				.set({ lastError: null, updatedAt: new Date().toISOString() })
+				.where(eq(tailscaleConfig.organizationId, organizationId));
+		}
+
 		return {
 			gateways: requestedGatewayIds.length,
 			endpoints: persisted.length,
