@@ -1,3 +1,10 @@
+## [0.39.1](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.39.0...v0.39.1) (2026-07-15)
+
+
+### Bug Fixes
+
+* prevent oversized Tailscale resource query ([#30](https://github.com/Bl4ckBl1zZ/dokploy/issues/30)) ([9681abe](https://github.com/Bl4ckBl1zZ/dokploy/commit/9681abe0b040e753bf05c66f3ba7be80ed48443a))
+
 # [0.39.0](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.38.1...v0.39.0) (2026-07-15)
 
 
