@@ -1,3 +1,10 @@
+# [0.39.0](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.38.1...v0.39.0) (2026-07-15)
+
+
+### Features
+
+* add fully managed Tailscale networking ([#29](https://github.com/Bl4ckBl1zZ/dokploy/issues/29)) ([33643e3](https://github.com/Bl4ckBl1zZ/dokploy/commit/33643e32ae5d4ba63b27dccffdbc4fb3eef6de29))
+
 ## [0.38.1](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.38.0...v0.38.1) (2026-07-14)
 
 
