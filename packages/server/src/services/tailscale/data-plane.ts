@@ -113,17 +113,24 @@ export const ensureTailscaleSourceProxy = async (input: {
 }): Promise<void> => {
 	const network = await ensureTailscaleOrganizationNetwork(input);
 	const sourceNetwork = input.sourceNetwork ?? network;
-	if (sourceNetwork !== network) {
-		await run(
-			input.serverId,
-			`docker network inspect ${quote([sourceNetwork])} >/dev/null`,
-		);
-	}
 	const name = tailscaleSourceProxyContainerName(
 		input.organizationId,
 		input.endpointId,
 		sourceNetwork,
 	);
+	if (sourceNetwork !== network) {
+		const exists = await run(
+			input.serverId,
+			`docker network inspect ${quote([sourceNetwork])} >/dev/null 2>&1 && printf yes || printf no`,
+		);
+		if (exists.stdout.trim() !== "yes") {
+			await run(
+				input.serverId,
+				`docker rm -f ${quote([name])} >/dev/null 2>&1 || true`,
+			);
+			return;
+		}
+	}
 	const ports = [...new Set(input.ports)].sort((a, b) => a - b);
 	if (!ports.length) return;
 	let routeCommand = "";

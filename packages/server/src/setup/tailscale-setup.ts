@@ -138,7 +138,9 @@ fi
 TS_STATUS=$(tailscale --socket="$TS_SOCKET" status --json 2>/dev/null || printf '{}')
 TS_SERVE=$(tailscale --socket="$TS_SOCKET" serve get-config --all 2>/dev/null || printf 'null')
 if command -v jq >/dev/null 2>&1; then
-	jq -n \
+	[ -n "$TS_STATUS" ] && printf '%s' "$TS_STATUS" | jq -e . >/dev/null 2>&1 || TS_STATUS='{}'
+	[ -n "$TS_SERVE" ] && printf '%s' "$TS_SERVE" | jq -e . >/dev/null 2>&1 || TS_SERVE='null'
+	jq -cn \
 		--arg binary "$TS_BINARY" \
 		--argjson serviceActive "$TS_ACTIVE" \
 		--arg version "$TS_VERSION" \
@@ -153,8 +155,16 @@ else
 fi
 `;
 
-const parseInspection = (stdout: string): TailscaleInspection => {
-	const lines = stdout.trim().split("\n");
+export const parseTailscaleInspection = (
+	stdout: string,
+): TailscaleInspection => {
+	const output = stdout.trim();
+	try {
+		return JSON.parse(output) as TailscaleInspection;
+	} catch {
+		// Remote shells can prepend output before the compact structured result.
+	}
+	const lines = output.split("\n");
 	for (let index = lines.length - 1; index >= 0; index -= 1) {
 		try {
 			return JSON.parse(lines[index] ?? "") as TailscaleInspection;
@@ -180,7 +190,7 @@ export const inspectTailscaleClient = async (
 		serverId,
 		tailscaleInspectionScript(socket),
 	);
-	return parseInspection(result.stdout);
+	return parseTailscaleInspection(result.stdout);
 };
 
 export const upgradeTailscalePackage = async (

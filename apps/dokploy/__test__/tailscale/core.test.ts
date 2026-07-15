@@ -22,6 +22,7 @@ import {
 	decideTailscaleClientMode,
 	isolatedTailscalePaths,
 	MINIMUM_TAILSCALE_SERVICES_VERSION,
+	parseTailscaleInspection,
 	tailscaleInspectionScript,
 } from "@dokploy/server/setup/tailscale-setup";
 import { prepareEnvironmentVariables } from "@dokploy/server/utils/docker/utils";
@@ -263,7 +264,25 @@ describe("Tailscale CIDR and client adoption matrix", () => {
 		);
 		const inspection = tailscaleInspectionScript();
 		expect(inspection).toContain("serve get-config --all");
+		expect(inspection).toContain("jq -cn");
 		expect(inspection).not.toContain("tailscale up --reset");
+	});
+
+	it("parses compact inspection output after shell noise and pretty JSON", () => {
+		expect(
+			parseTailscaleInspection(
+				'login notice\n{"binary":"/usr/bin/tailscale","version":"1.98.8"}',
+			).version,
+		).toBe("1.98.8");
+		expect(
+			parseTailscaleInspection(
+				JSON.stringify(
+					{ binary: "/usr/bin/tailscale", version: "1.98.8" },
+					null,
+					2,
+				),
+			).binary,
+		).toBe("/usr/bin/tailscale");
 	});
 
 	it("keeps the final isolated /30 inside the link-local address space", () => {
