@@ -1,5 +1,7 @@
 import { dirname, join } from "node:path";
 import { paths } from "@dokploy/server/constants";
+import { getPrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment";
+import type { PrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment-template";
 import type { InferResultType } from "@dokploy/server/types/with";
 import boxen from "boxen";
 import { quote } from "shell-quote";
@@ -19,9 +21,13 @@ export const getBuildComposeCommand = async (compose: ComposeNested) => {
 	const { COMPOSE_PATH } = paths(!!compose.serverId);
 	const { sourceType, appName, mounts, composeType, domains } = compose;
 	const command = createCommand(compose);
-	const envCommand = getCreateEnvFileCommand(compose);
+	const privateContext = await getPrivateEnvironmentContext(
+		compose.environment.project.projectId,
+		compose.appName,
+	);
+	const envCommand = getCreateEnvFileCommand(compose, privateContext);
 	const projectPath = join(COMPOSE_PATH, compose.appName, "code");
-	const exportEnvCommand = getExportEnvCommand(compose);
+	const exportEnvCommand = getExportEnvCommand(compose, privateContext);
 
 	const newCompose = await writeDomainsToCompose(compose, domains);
 	const logContent = `
@@ -96,7 +102,10 @@ export const createCommand = (compose: ComposeNested) => {
 	return command;
 };
 
-export const getCreateEnvFileCommand = (compose: ComposeNested) => {
+export const getCreateEnvFileCommand = (
+	compose: ComposeNested,
+	privateContext?: PrivateEnvironmentContext,
+) => {
 	const { COMPOSE_PATH } = paths(!!compose.serverId);
 	const { env, composePath, appName } = compose;
 	const composeFilePath =
@@ -120,6 +129,7 @@ export const getCreateEnvFileCommand = (compose: ComposeNested) => {
 		envContent,
 		compose.environment.project.env,
 		compose.environment.env,
+		privateContext,
 	).join("\n");
 
 	const encodedContent = encodeBase64(envFileContent);
@@ -129,13 +139,17 @@ echo "${encodedContent}" | base64 -d > "${envFilePath}";
 	`;
 };
 
-const getExportEnvCommand = (compose: ComposeNested) => {
+const getExportEnvCommand = (
+	compose: ComposeNested,
+	privateContext?: PrivateEnvironmentContext,
+) => {
 	if (compose.composeType !== "stack") return "";
 
 	const envVars = getEnvironmentVariablesObject(
 		compose.env,
 		compose.environment.project.env,
 		compose.environment.env,
+		privateContext,
 	);
 	const exports = Object.entries(envVars)
 		.map(([key, value]) => `${key}=${quote([value])}`)

@@ -426,7 +426,18 @@ export const serverRouter = createTRPCRouter({
 					"@dokploy/server/services/cloudflare/orchestrator"
 				);
 				await cleanupServer(input.serverId, true);
+				const { removeTailscaleServer } = await import(
+					"@dokploy/server/services/tailscale/orchestrator"
+				);
+				await removeTailscaleServer(
+					currentServer.organizationId,
+					input.serverId,
+				);
 				await deleteServer(input.serverId);
+				const { scheduleTailscaleReconciliation } = await import(
+					"@dokploy/server/services/tailscale/reconcile-scheduler"
+				);
+				scheduleTailscaleReconciliation(currentServer.organizationId);
 
 				if (IS_CLOUD) {
 					const admin = await findUserById(ctx.user.ownerId);

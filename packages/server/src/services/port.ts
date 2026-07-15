@@ -3,6 +3,7 @@ import { type apiCreatePort, ports } from "@dokploy/server/db/schema";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
+import { scheduleTailscaleReconciliationForResource } from "./tailscale/reconcile-scheduler";
 
 export type Port = typeof ports.$inferSelect;
 
@@ -21,6 +22,10 @@ export const createPort = async (input: z.infer<typeof apiCreatePort>) => {
 			message: "Error input: Inserting port",
 		});
 	}
+	void scheduleTailscaleReconciliationForResource(
+		"application",
+		newPort.applicationId,
+	);
 
 	return newPort;
 };
@@ -50,10 +55,15 @@ export const finPortById = async (portId: string) => {
 };
 
 export const removePortById = async (portId: string) => {
+	const port = await finPortById(portId);
 	const result = await db
 		.delete(ports)
 		.where(eq(ports.portId, portId))
 		.returning();
+	void scheduleTailscaleReconciliationForResource(
+		"application",
+		port.applicationId,
+	);
 
 	return result[0];
 };
@@ -62,6 +72,7 @@ export const updatePortById = async (
 	portId: string,
 	portData: Partial<Port>,
 ) => {
+	const port = await finPortById(portId);
 	const result = await db
 		.update(ports)
 		.set({
@@ -69,6 +80,10 @@ export const updatePortById = async (
 		})
 		.where(eq(ports.portId, portId))
 		.returning();
+	void scheduleTailscaleReconciliationForResource(
+		"application",
+		port.applicationId,
+	);
 
 	return result[0];
 };

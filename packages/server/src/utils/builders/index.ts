@@ -1,4 +1,5 @@
 import { findRegistryByIdWithCredentials } from "@dokploy/server/services/registry";
+import { getPrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment";
 import type { InferResultType } from "@dokploy/server/types/with";
 import type { CreateServiceOptions } from "dockerode";
 import { getRegistryTag, uploadImageRemoteCommand } from "../cluster/upload";
@@ -39,27 +40,31 @@ export type ApplicationNested = InferResultType<
 
 export const getBuildCommand = async (application: ApplicationNested) => {
 	let command = "";
+	const privateContext = await getPrivateEnvironmentContext(
+		application.environment.project.projectId,
+		application.appName,
+	);
 
 	if (application.sourceType !== "docker") {
 		const { buildType } = application;
 		switch (buildType) {
 			case "nixpacks":
-				command = getNixpacksCommand(application);
+				command = getNixpacksCommand(application, privateContext);
 				break;
 			case "heroku_buildpacks":
-				command = getHerokuCommand(application);
+				command = getHerokuCommand(application, privateContext);
 				break;
 			case "paketo_buildpacks":
-				command = getPaketoCommand(application);
+				command = getPaketoCommand(application, privateContext);
 				break;
 			case "static":
 				command = getStaticCommand(application);
 				break;
 			case "dockerfile":
-				command = getDockerCommand(application);
+				command = getDockerCommand(application, privateContext);
 				break;
 			case "railpack":
-				command = getRailpackCommand(application);
+				command = getRailpackCommand(application, privateContext);
 				break;
 		}
 	}
@@ -120,6 +125,10 @@ export const mechanizeDockerContainer = async (
 		env,
 		application.environment.project.env,
 		application.environment.env,
+		await getPrivateEnvironmentContext(
+			application.environment.project.projectId,
+			application.appName,
+		),
 	);
 
 	const image = await getImageName(application);

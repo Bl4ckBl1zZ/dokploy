@@ -27,6 +27,7 @@ import {
 	type Registry,
 	safeDockerLoginCommand,
 } from "./registry";
+import { getPrivateEnvironmentContext } from "./tailscale/environment";
 
 export const createRollback = async (
 	input: z.infer<typeof createRollbackSchema>,
@@ -275,6 +276,11 @@ const rollbackApplication = async (
 	const envVariables = prepareEnvironmentVariables(
 		env,
 		fullContext.environment.project.env,
+		undefined,
+		await getPrivateEnvironmentContext(
+			fullContext.environment.project.projectId,
+			fullContext.appName,
+		),
 	);
 
 	let rollbackImage = image;

@@ -18,6 +18,7 @@ import { findApplicationById } from "./application";
 import { removeDeploymentsByPreviewDeploymentId } from "./deployment";
 import { createDomain } from "./domain";
 import { type Github, getIssueComment } from "./github";
+import { scheduleTailscaleReconciliationForResource } from "./tailscale/reconcile-scheduler";
 import { getWebServerSettings } from "./web-server-settings";
 
 export type PreviewDeployment = typeof previewDeployments.$inferSelect;
@@ -82,6 +83,10 @@ export const removePreviewDeployment = async (previewDeploymentId: string) => {
 				console.error(error);
 			}
 		}
+		void scheduleTailscaleReconciliationForResource(
+			"application",
+			previewDeployment.applicationId,
+		);
 		return previewDeployment;
 	} catch (error) {
 		const message =
@@ -106,6 +111,12 @@ export const updatePreviewDeployment = async (
 		})
 		.where(eq(previewDeployments.previewDeploymentId, previewDeploymentId))
 		.returning();
+	if (application[0]) {
+		void scheduleTailscaleReconciliationForResource(
+			"application",
+			application[0].applicationId,
+		);
+	}
 
 	return application;
 };
@@ -200,6 +211,10 @@ export const createPreviewDeployment = async (
 				previewDeployment.previewDeploymentId,
 			),
 		);
+	void scheduleTailscaleReconciliationForResource(
+		"application",
+		previewDeployment.applicationId,
+	);
 
 	return previewDeployment;
 };

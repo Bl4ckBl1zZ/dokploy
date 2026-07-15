@@ -14,6 +14,10 @@ import { TRPCError } from "@trpc/server";
 import { eq, getTableColumns } from "drizzle-orm";
 import type { z } from "zod";
 import { validUniqueServerAppName } from "./project";
+import {
+	scheduleTailscaleReconciliation,
+	scheduleTailscaleReconciliationForResource,
+} from "./tailscale/reconcile-scheduler";
 
 export type Mongo = typeof mongo.$inferSelect;
 
@@ -95,6 +99,7 @@ export const updateMongoById = async (
 		})
 		.where(eq(mongo.mongoId, mongoId))
 		.returning();
+	void scheduleTailscaleReconciliationForResource("mongo", mongoId);
 
 	return result[0];
 };
@@ -138,10 +143,12 @@ export const findComposeByBackupId = async (backupId: string) => {
 };
 
 export const removeMongoById = async (mongoId: string) => {
+	const entity = await findMongoById(mongoId);
 	const result = await db
 		.delete(mongo)
 		.where(eq(mongo.mongoId, mongoId))
 		.returning();
+	scheduleTailscaleReconciliation(entity.environment.project.organizationId);
 
 	return result[0];
 };

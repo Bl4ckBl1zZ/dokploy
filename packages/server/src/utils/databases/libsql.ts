@@ -1,3 +1,4 @@
+import { getPrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment";
 import type { InferResultType } from "@dokploy/server/types/with";
 import type { CreateServiceOptions, PortConfig } from "dockerode";
 import {
@@ -66,6 +67,10 @@ export const buildLibsql = async (libsql: LibsqlNested) => {
 		defaultLibsqlEnv,
 		libsql.environment.project.env,
 		libsql.environment.env,
+		await getPrivateEnvironmentContext(
+			libsql.environment.project.projectId,
+			libsql.appName,
+		),
 	);
 	const volumesMount = generateVolumeMounts(mounts);
 	const bindsMount = generateBindMounts(mounts);

@@ -13,6 +13,10 @@ import { TRPCError } from "@trpc/server";
 import { eq, getTableColumns } from "drizzle-orm";
 import type { z } from "zod";
 import { validUniqueServerAppName } from "./project";
+import {
+	scheduleTailscaleReconciliation,
+	scheduleTailscaleReconciliationForResource,
+} from "./tailscale/reconcile-scheduler";
 
 export type Mariadb = typeof mariadb.$inferSelect;
 
@@ -100,15 +104,18 @@ export const updateMariadbById = async (
 		})
 		.where(eq(mariadb.mariadbId, mariadbId))
 		.returning();
+	void scheduleTailscaleReconciliationForResource("mariadb", mariadbId);
 
 	return result[0];
 };
 
 export const removeMariadbById = async (mariadbId: string) => {
+	const entity = await findMariadbById(mariadbId);
 	const result = await db
 		.delete(mariadb)
 		.where(eq(mariadb.mariadbId, mariadbId))
 		.returning();
+	scheduleTailscaleReconciliation(entity.environment.project.organizationId);
 
 	return result[0];
 };

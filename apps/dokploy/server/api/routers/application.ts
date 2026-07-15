@@ -37,6 +37,7 @@ import {
 	checkServicePermissionAndAccess,
 	findMemberByUserId,
 } from "@dokploy/server/services/permission";
+import { scheduleTailscaleReconciliation } from "@dokploy/server/services/tailscale/reconcile-scheduler";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -247,6 +248,9 @@ export const applicationRouter = createTRPCRouter({
 				.delete(applications)
 				.where(eq(applications.applicationId, input.applicationId))
 				.returning();
+			scheduleTailscaleReconciliation(
+				application.environment.project.organizationId,
+			);
 
 			if (!IS_CLOUD) {
 				await cleanQueuesByApplication(input.applicationId);

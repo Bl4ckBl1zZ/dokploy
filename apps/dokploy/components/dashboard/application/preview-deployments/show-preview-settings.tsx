@@ -80,6 +80,7 @@ interface Props {
 export const ShowPreviewSettings = ({ applicationId }: Props) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const [isEnabled, setIsEnabled] = useState(false);
+	const [tailscaleEnabled, setTailscaleEnabled] = useState(false);
 	const { mutateAsync: updateApplication, isPending } =
 		api.application.update.useMutation();
 
@@ -110,7 +111,8 @@ export const ShowPreviewSettings = ({ applicationId }: Props) => {
 
 	useEffect(() => {
 		setIsEnabled(data?.isPreviewDeploymentsActive || false);
-	}, [data?.isPreviewDeploymentsActive]);
+		setTailscaleEnabled(data?.tailscalePreviewEnabled || false);
+	}, [data?.isPreviewDeploymentsActive, data?.tailscalePreviewEnabled]);
 
 	useEffect(() => {
 		if (data) {
@@ -425,6 +427,35 @@ export const ShowPreviewSettings = ({ applicationId }: Props) => {
 													.catch((error) => {
 														toast.error(error.message);
 													});
+											}}
+										/>
+									</div>
+									<div className="flex flex-row items-center justify-between rounded-lg border p-4 col-span-2">
+										<div className="space-y-0.5">
+											<FormLabel className="text-base">
+												Private Tailscale endpoint
+											</FormLabel>
+											<FormDescription>
+												Create stable private hostnames for preview deployments.
+											</FormDescription>
+										</div>
+										<Switch
+											checked={tailscaleEnabled}
+											onCheckedChange={(checked) => {
+												setTailscaleEnabled(checked);
+												updateApplication({
+													tailscalePreviewEnabled: checked,
+													applicationId,
+												})
+													.then(() => {
+														refetch();
+														toast.success(
+															checked
+																? "Private preview endpoints enabled"
+																: "Private preview endpoints disabled",
+														);
+													})
+													.catch((error) => toast.error(error.message));
 											}}
 										/>
 									</div>

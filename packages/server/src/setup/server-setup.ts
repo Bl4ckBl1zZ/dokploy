@@ -10,6 +10,7 @@ import {
 	findServerById,
 	updateServerById,
 } from "@dokploy/server/services/server";
+import { provisionTailscaleGateway } from "@dokploy/server/services/tailscale/orchestrator";
 import {
 	getDefaultMiddlewares,
 	getDefaultServerTraefikConfig,
@@ -78,6 +79,13 @@ export const serverSetup = async (
 		} catch (tunnelErr) {
 			// Non-fatal: server still works without the CF tunnel
 			console.warn("Cloudflare tunnel provisioning failed:", tunnelErr);
+		}
+
+		try {
+			await provisionTailscaleGateway(server.organizationId, serverId, onData);
+		} catch (tailscaleError) {
+			// Private networking is independent from server setup and public ingress.
+			console.warn("Tailscale gateway provisioning failed:", tailscaleError);
 		}
 
 		if (IS_CLOUD) {

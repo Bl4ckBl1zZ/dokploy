@@ -43,6 +43,7 @@ import {
 } from "./deployment";
 import { generateApplyPatchesCommand } from "./patch";
 import { validUniqueServerAppName } from "./project";
+import { scheduleTailscaleReconciliationForResource } from "./tailscale/reconcile-scheduler";
 
 export type Compose = typeof compose.$inferSelect;
 
@@ -206,6 +207,7 @@ export const updateCompose = async (
 		})
 		.where(eq(compose.composeId, composeId))
 		.returning();
+	void scheduleTailscaleReconciliationForResource("compose", composeId);
 
 	return composeResult[0];
 };

@@ -1,4 +1,5 @@
 import { dirname, join } from "node:path";
+import type { PrivateEnvironmentContext } from "../../services/tailscale/environment-template";
 import { encodeBase64, prepareEnvironmentVariables } from "../docker/utils";
 
 export const createEnvFileCommand = (
@@ -6,11 +7,13 @@ export const createEnvFileCommand = (
 	env: string | null,
 	projectEnv?: string | null,
 	environmentEnv?: string | null,
+	privateContext?: PrivateEnvironmentContext,
 ) => {
 	const envFileContent = prepareEnvironmentVariables(
 		env,
 		projectEnv,
 		environmentEnv,
+		privateContext,
 	).join("\n");
 
 	const encodedContent = encodeBase64(envFileContent || "");
