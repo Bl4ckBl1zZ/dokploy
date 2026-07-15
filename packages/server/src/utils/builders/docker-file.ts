@@ -1,3 +1,4 @@
+import type { PrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment-template";
 import {
 	getEnvironmentVariablesObject,
 	prepareEnvironmentVariablesForShell,
@@ -10,7 +11,10 @@ import {
 import type { ApplicationNested } from ".";
 import { createEnvFileCommand } from "./utils";
 
-export const getDockerCommand = (application: ApplicationNested) => {
+export const getDockerCommand = (
+	application: ApplicationNested,
+	privateContext?: PrivateEnvironmentContext,
+) => {
 	const {
 		appName,
 		env,
@@ -46,6 +50,7 @@ export const getDockerCommand = (application: ApplicationNested) => {
 			buildArgs,
 			application.environment.project.env,
 			application.environment.env,
+			privateContext,
 		);
 
 		for (const arg of args) {
@@ -56,6 +61,7 @@ export const getDockerCommand = (application: ApplicationNested) => {
 			buildSecrets,
 			application.environment.project.env,
 			application.environment.env,
+			privateContext,
 		);
 
 		const joinedSecrets = Object.entries(secrets)
@@ -74,6 +80,7 @@ export const getDockerCommand = (application: ApplicationNested) => {
 				env,
 				application.environment.project.env,
 				application.environment.env,
+				privateContext,
 			);
 		}
 

@@ -11,8 +11,24 @@ import { type apiCreateDomain, domains } from "../db/schema";
 import { findApplicationById } from "./application";
 import { detectCDNProvider } from "./cdn";
 import { findServerById } from "./server";
+import { scheduleTailscaleReconciliationForResource } from "./tailscale/reconcile-scheduler";
 
 export type Domain = typeof domains.$inferSelect;
+
+const scheduleDomainReconciliation = (domain: Domain): void => {
+	if (domain.applicationId) {
+		void scheduleTailscaleReconciliationForResource(
+			"application",
+			domain.applicationId,
+		);
+	}
+	if (domain.composeId) {
+		void scheduleTailscaleReconciliationForResource(
+			"compose",
+			domain.composeId,
+		);
+	}
+};
 
 export const createDomain = async (input: z.infer<typeof apiCreateDomain>) => {
 	const result = await db.transaction(async (tx) => {
@@ -39,6 +55,7 @@ export const createDomain = async (input: z.infer<typeof apiCreateDomain>) => {
 
 		return domain;
 	});
+	scheduleDomainReconciliation(result);
 
 	return result;
 };
@@ -118,6 +135,7 @@ export const updateDomainById = async (
 	domainId: string,
 	domainData: Partial<Domain>,
 ) => {
+	const existing = await findDomainById(domainId);
 	const domain = await db
 		.update(domains)
 		.set({
@@ -126,16 +144,19 @@ export const updateDomainById = async (
 		})
 		.where(eq(domains.domainId, domainId))
 		.returning();
+	if (domain[0]) scheduleDomainReconciliation(domain[0]);
+	else scheduleDomainReconciliation(existing);
 
 	return domain[0];
 };
 
 export const removeDomainById = async (domainId: string) => {
-	await findDomainById(domainId);
+	const domain = await findDomainById(domainId);
 	const result = await db
 		.delete(domains)
 		.where(eq(domains.domainId, domainId))
 		.returning();
+	scheduleDomainReconciliation(domain);
 
 	return result[0];
 };

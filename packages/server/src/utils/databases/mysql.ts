@@ -1,3 +1,4 @@
+import { getPrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment";
 import type { InferResultType } from "@dokploy/server/types/with";
 import type { CreateServiceOptions } from "dockerode";
 import {
@@ -66,6 +67,10 @@ export const buildMysql = async (mysql: MysqlNested) => {
 		defaultMysqlEnv,
 		mysql.environment.project.env,
 		mysql.environment.env,
+		await getPrivateEnvironmentContext(
+			mysql.environment.project.projectId,
+			mysql.appName,
+		),
 	);
 	const volumesMount = generateVolumeMounts(mounts);
 	const bindsMount = generateBindMounts(mounts);

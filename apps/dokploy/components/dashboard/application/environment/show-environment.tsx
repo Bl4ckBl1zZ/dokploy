@@ -4,6 +4,7 @@ import { type CSSProperties, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { PrivateEndpointPicker } from "@/components/dashboard/shared/private-endpoint-picker";
 import { CodeEditor } from "@/components/shared/code-editor";
 import { Button } from "@/components/ui/button";
 import {
@@ -188,6 +189,11 @@ PORT=3000
 										<FormMessage />
 									</FormItem>
 								)}
+							/>
+
+							<PrivateEndpointPicker
+								projectId={data?.environment.project.projectId}
+								selfReferenceKey={data?.appName}
 							/>
 
 							{canWrite && (

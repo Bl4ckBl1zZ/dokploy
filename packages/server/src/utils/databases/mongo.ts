@@ -1,3 +1,4 @@
+import { getPrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment";
 import type { InferResultType } from "@dokploy/server/types/with";
 import type { CreateServiceOptions } from "dockerode";
 import {
@@ -108,6 +109,10 @@ ${command ?? "wait $MONGOD_PID"}`;
 		defaultMongoEnv,
 		mongo.environment.project.env,
 		mongo.environment.env,
+		await getPrivateEnvironmentContext(
+			mongo.environment.project.projectId,
+			mongo.appName,
+		),
 	);
 	const volumesMount = generateVolumeMounts(mounts);
 	const bindsMount = generateBindMounts(mounts);

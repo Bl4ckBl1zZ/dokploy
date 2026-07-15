@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { PrivateEndpointPicker } from "@/components/dashboard/shared/private-endpoint-picker";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -139,6 +140,10 @@ export const ShowEnvironment = ({ applicationId }: Props) => {
 							</span>
 						}
 						placeholder={["NODE_ENV=production", "PORT=3000"].join("\n")}
+					/>
+					<PrivateEndpointPicker
+						projectId={data?.environment.project.projectId}
+						selfReferenceKey={data?.appName}
 					/>
 					{data?.buildType === "dockerfile" && (
 						<Secrets

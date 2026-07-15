@@ -51,6 +51,7 @@ import {
 	updatePreviewDeployment,
 } from "./preview-deployment";
 import { validUniqueServerAppName } from "./project";
+import { scheduleTailscaleReconciliationForResource } from "./tailscale/reconcile-scheduler";
 export type Application = typeof applications.$inferSelect;
 
 export const createApplication = async (
@@ -142,6 +143,7 @@ export const updateApplication = async (
 		})
 		.where(eq(applications.applicationId, applicationId))
 		.returning();
+	void scheduleTailscaleReconciliationForResource("application", applicationId);
 
 	return application[0];
 };
@@ -157,6 +159,7 @@ export const updateApplicationStatus = async (
 		})
 		.where(eq(applications.applicationId, applicationId))
 		.returning();
+	void scheduleTailscaleReconciliationForResource("application", applicationId);
 
 	return application;
 };

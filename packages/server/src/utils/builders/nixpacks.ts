@@ -1,11 +1,15 @@
 import path from "node:path";
+import type { PrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment-template";
 import { getStaticCommand } from "@dokploy/server/utils/builders/static";
 import { nanoid } from "nanoid";
 import { prepareEnvironmentVariablesForShell } from "../docker/utils";
 import { getBuildAppDirectory } from "../filesystem/directory";
 import type { ApplicationNested } from ".";
 
-export const getNixpacksCommand = (application: ApplicationNested) => {
+export const getNixpacksCommand = (
+	application: ApplicationNested,
+	privateContext?: PrivateEnvironmentContext,
+) => {
 	const { env, appName, publishDirectory, cleanCache } = application;
 
 	const buildAppDirectory = getBuildAppDirectory(application);
@@ -14,6 +18,7 @@ export const getNixpacksCommand = (application: ApplicationNested) => {
 		env,
 		application.environment.project.env,
 		application.environment.env,
+		privateContext,
 	);
 
 	const args = ["build", buildAppDirectory, "--name", appName];

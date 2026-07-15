@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import type { PrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment-template";
 import { nanoid } from "nanoid";
 import { quote } from "shell-quote";
 import {
@@ -17,13 +18,17 @@ const calculateSecretsHash = (envVariables: string[]): string => {
 	return hash.digest("hex");
 };
 
-export const getRailpackCommand = (application: ApplicationNested) => {
+export const getRailpackCommand = (
+	application: ApplicationNested,
+	privateContext?: PrivateEnvironmentContext,
+) => {
 	const { env, appName, cleanCache } = application;
 	const buildAppDirectory = getBuildAppDirectory(application);
 	const envVariables = prepareEnvironmentVariablesForShell(
 		env,
 		application.environment.project.env,
 		application.environment.env,
+		privateContext,
 	);
 
 	// Prepare command
@@ -75,6 +80,7 @@ export const getRailpackCommand = (application: ApplicationNested) => {
 		env,
 		application.environment.project.env,
 		application.environment.env,
+		privateContext,
 	);
 	const exportEnvs = [];
 	for (const pair of rawEnvVariables) {

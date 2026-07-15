@@ -3,6 +3,10 @@ import path from "node:path";
 import type { Readable } from "node:stream";
 import { docker, paths } from "@dokploy/server/constants";
 import type { Compose } from "@dokploy/server/services/compose";
+import {
+	type PrivateEnvironmentContext,
+	resolvePrivateEnvironmentReferences,
+} from "@dokploy/server/services/tailscale/environment-template";
 import type { ContainerInfo, ResourceRequirements } from "dockerode";
 import { parse } from "dotenv";
 import { quote } from "shell-quote";
@@ -400,6 +404,7 @@ export const prepareEnvironmentVariables = (
 	serviceEnv: string | null,
 	projectEnv?: string | null,
 	environmentEnv?: string | null,
+	privateContext?: PrivateEnvironmentContext,
 ) => {
 	const projectVars = parse(projectEnv ?? "");
 	const environmentVars = parse(environmentEnv ?? "");
@@ -435,6 +440,12 @@ export const prepareEnvironmentVariables = (
 				},
 			);
 		}
+		if (resolvedValue.includes("${{private.")) {
+			resolvedValue = resolvePrivateEnvironmentReferences(
+				resolvedValue,
+				privateContext,
+			);
+		}
 
 		// Replace self-references (service variables)
 		resolvedValue = resolvedValue.replace(/\$\{\{(.*?)\}\}/g, (_, ref) => {
@@ -443,6 +454,12 @@ export const prepareEnvironmentVariables = (
 			}
 			throw new Error(`Invalid service environment variable: ${ref}`);
 		});
+		if (resolvedValue.includes("${{private.")) {
+			resolvedValue = resolvePrivateEnvironmentReferences(
+				resolvedValue,
+				privateContext,
+			);
+		}
 
 		return `${key}=${resolvedValue}`;
 	});
@@ -454,11 +471,13 @@ export const prepareEnvironmentVariablesForShell = (
 	serviceEnv: string | null,
 	projectEnv?: string | null,
 	environmentEnv?: string | null,
+	privateContext?: PrivateEnvironmentContext,
 ): string[] => {
 	const envVars = prepareEnvironmentVariables(
 		serviceEnv,
 		projectEnv,
 		environmentEnv,
+		privateContext,
 	);
 	// Using shell-quote library to properly escape shell arguments
 	// This is the standard way to handle special characters in shell commands
@@ -480,8 +499,14 @@ export const getEnvironmentVariablesObject = (
 	input: string | null,
 	projectEnv?: string | null,
 	environmentEnv?: string | null,
+	privateContext?: PrivateEnvironmentContext,
 ) => {
-	const envs = prepareEnvironmentVariables(input, projectEnv, environmentEnv);
+	const envs = prepareEnvironmentVariables(
+		input,
+		projectEnv,
+		environmentEnv,
+		privateContext,
+	);
 
 	const jsonObject: Record<string, string> = {};
 

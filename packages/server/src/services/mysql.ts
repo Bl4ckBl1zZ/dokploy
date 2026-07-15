@@ -13,6 +13,10 @@ import { TRPCError } from "@trpc/server";
 import { eq, getTableColumns } from "drizzle-orm";
 import type { z } from "zod";
 import { validUniqueServerAppName } from "./project";
+import {
+	scheduleTailscaleReconciliation,
+	scheduleTailscaleReconciliationForResource,
+} from "./tailscale/reconcile-scheduler";
 
 export type MySql = typeof mysql.$inferSelect;
 
@@ -98,6 +102,7 @@ export const updateMySqlById = async (
 		})
 		.where(eq(mysql.mysqlId, mysqlId))
 		.returning();
+	void scheduleTailscaleReconciliationForResource("mysql", mysqlId);
 
 	return result[0];
 };
@@ -122,10 +127,12 @@ export const findMySqlByBackupId = async (backupId: string) => {
 };
 
 export const removeMySqlById = async (mysqlId: string) => {
+	const entity = await findMySqlById(mysqlId);
 	const result = await db
 		.delete(mysql)
 		.where(eq(mysql.mysqlId, mysqlId))
 		.returning();
+	scheduleTailscaleReconciliation(entity.environment.project.organizationId);
 
 	return result[0];
 };

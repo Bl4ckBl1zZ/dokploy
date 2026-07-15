@@ -13,6 +13,10 @@ import { TRPCError } from "@trpc/server";
 import { eq, getTableColumns } from "drizzle-orm";
 import type { z } from "zod";
 import { validUniqueServerAppName } from "./project";
+import {
+	scheduleTailscaleReconciliation,
+	scheduleTailscaleReconciliationForResource,
+} from "./tailscale/reconcile-scheduler";
 
 export function getMountPath(dockerImage: string): string {
 	const versionMatch = dockerImage.match(/postgres:(\d+)/);
@@ -127,15 +131,18 @@ export const updatePostgresById = async (
 		})
 		.where(eq(postgres.postgresId, postgresId))
 		.returning();
+	void scheduleTailscaleReconciliationForResource("postgres", postgresId);
 
 	return result[0];
 };
 
 export const removePostgresById = async (postgresId: string) => {
+	const entity = await findPostgresById(postgresId);
 	const result = await db
 		.delete(postgres)
 		.where(eq(postgres.postgresId, postgresId))
 		.returning();
+	scheduleTailscaleReconciliation(entity.environment.project.organizationId);
 
 	return result[0];
 };

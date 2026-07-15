@@ -13,6 +13,10 @@ import { TRPCError } from "@trpc/server";
 import { eq, getTableColumns } from "drizzle-orm";
 import type { z } from "zod";
 import { validUniqueServerAppName } from "./project";
+import {
+	scheduleTailscaleReconciliation,
+	scheduleTailscaleReconciliationForResource,
+} from "./tailscale/reconcile-scheduler";
 
 export type Libsql = typeof libsql.$inferSelect;
 
@@ -95,15 +99,18 @@ export const updateLibsqlById = async (
 		})
 		.where(eq(libsql.libsqlId, libsqlId))
 		.returning();
+	void scheduleTailscaleReconciliationForResource("libsql", libsqlId);
 
 	return result[0];
 };
 
 export const removeLibsqlById = async (libsqlId: string) => {
+	const entity = await findLibsqlById(libsqlId);
 	const result = await db
 		.delete(libsql)
 		.where(eq(libsql.libsqlId, libsqlId))
 		.returning();
+	scheduleTailscaleReconciliation(entity.environment.project.organizationId);
 
 	return result[0];
 };

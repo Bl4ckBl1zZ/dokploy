@@ -46,6 +46,7 @@ import { ssoRouter } from "./routers/sso";
 import { stripeRouter } from "./routers/stripe";
 import { swarmRouter } from "./routers/swarm";
 import { tagRouter } from "./routers/tag";
+import { tailscaleRouter } from "./routers/tailscale";
 import { userRouter } from "./routers/user";
 import { volumeBackupsRouter } from "./routers/volume-backups";
 import { whitelabelingRouter } from "./routers/whitelabeling";
@@ -105,6 +106,7 @@ export const appRouter = createTRPCRouter({
 	volumeBackups: volumeBackupsRouter,
 	environment: environmentRouter,
 	tag: tagRouter,
+	tailscale: tailscaleRouter,
 	patch: patchRouter,
 });
 

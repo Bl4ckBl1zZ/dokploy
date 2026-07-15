@@ -1,3 +1,4 @@
+import { getPrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment";
 import type { InferResultType } from "@dokploy/server/types/with";
 import type { CreateServiceOptions } from "dockerode";
 import {
@@ -59,6 +60,10 @@ export const buildPostgres = async (postgres: PostgresNested) => {
 		defaultPostgresEnv,
 		postgres.environment.project.env,
 		postgres.environment.env,
+		await getPrivateEnvironmentContext(
+			postgres.environment.project.projectId,
+			postgres.appName,
+		),
 	);
 	const volumesMount = generateVolumeMounts(mounts);
 	const bindsMount = generateBindMounts(mounts);

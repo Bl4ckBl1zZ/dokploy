@@ -1,3 +1,4 @@
+import { getPrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment";
 import type { InferResultType } from "@dokploy/server/types/with";
 import type { CreateServiceOptions } from "dockerode";
 import {
@@ -57,6 +58,10 @@ export const buildRedis = async (redis: RedisNested) => {
 		defaultRedisEnv,
 		redis.environment.project.env,
 		redis.environment.env,
+		await getPrivateEnvironmentContext(
+			redis.environment.project.projectId,
+			redis.appName,
+		),
 	);
 	const volumesMount = generateVolumeMounts(mounts);
 	const bindsMount = generateBindMounts(mounts);

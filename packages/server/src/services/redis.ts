@@ -12,6 +12,10 @@ import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import type { z } from "zod";
 import { validUniqueServerAppName } from "./project";
+import {
+	scheduleTailscaleReconciliation,
+	scheduleTailscaleReconciliationForResource,
+} from "./tailscale/reconcile-scheduler";
 
 export type Redis = typeof redis.$inferSelect;
 
@@ -83,15 +87,18 @@ export const updateRedisById = async (
 		})
 		.where(eq(redis.redisId, redisId))
 		.returning();
+	void scheduleTailscaleReconciliationForResource("redis", redisId);
 
 	return result[0];
 };
 
 export const removeRedisById = async (redisId: string) => {
+	const entity = await findRedisById(redisId);
 	const result = await db
 		.delete(redis)
 		.where(eq(redis.redisId, redisId))
 		.returning();
+	scheduleTailscaleReconciliation(entity.environment.project.organizationId);
 
 	return result[0];
 };

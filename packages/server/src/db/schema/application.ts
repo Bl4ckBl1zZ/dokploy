@@ -105,6 +105,9 @@ export const applications = pgTable("application", {
 	isPreviewDeploymentsActive: boolean("isPreviewDeploymentsActive").default(
 		false,
 	),
+	tailscalePreviewEnabled: boolean("tailscalePreviewEnabled")
+		.notNull()
+		.default(false),
 	// Security: Require collaborator permissions for preview deployments
 	previewRequireCollaboratorPermissions: boolean(
 		"previewRequireCollaboratorPermissions",

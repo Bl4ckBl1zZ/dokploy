@@ -1,3 +1,4 @@
+import { getPrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment";
 import type { InferResultType } from "@dokploy/server/types/with";
 import type { CreateServiceOptions } from "dockerode";
 import {
@@ -60,6 +61,10 @@ export const buildMariadb = async (mariadb: MariadbNested) => {
 		defaultMariadbEnv,
 		mariadb.environment.project.env,
 		mariadb.environment.env,
+		await getPrivateEnvironmentContext(
+			mariadb.environment.project.projectId,
+			mariadb.appName,
+		),
 	);
 	const volumesMount = generateVolumeMounts(mounts);
 	const bindsMount = generateBindMounts(mounts);

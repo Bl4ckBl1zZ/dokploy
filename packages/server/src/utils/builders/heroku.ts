@@ -1,8 +1,12 @@
+import type { PrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment-template";
 import { prepareEnvironmentVariablesForShell } from "../docker/utils";
 import { getBuildAppDirectory } from "../filesystem/directory";
 import type { ApplicationNested } from ".";
 
-export const getHerokuCommand = (application: ApplicationNested) => {
+export const getHerokuCommand = (
+	application: ApplicationNested,
+	privateContext?: PrivateEnvironmentContext,
+) => {
 	const { env, appName, cleanCache } = application;
 
 	const buildAppDirectory = getBuildAppDirectory(application);
@@ -10,6 +14,7 @@ export const getHerokuCommand = (application: ApplicationNested) => {
 		env,
 		application.environment.project.env,
 		application.environment.env,
+		privateContext,
 	);
 
 	const args = [

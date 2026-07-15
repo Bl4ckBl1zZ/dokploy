@@ -40,6 +40,7 @@ import {
 	checkServicePermissionAndAccess,
 	findMemberByUserId,
 } from "@dokploy/server/services/permission";
+import { scheduleTailscaleReconciliation } from "@dokploy/server/services/tailscale/reconcile-scheduler";
 import {
 	type CompleteTemplate,
 	fetchTemplateFiles,
@@ -260,6 +261,9 @@ export const composeRouter = createTRPCRouter({
 				.delete(composeTable)
 				.where(eq(composeTable.composeId, input.composeId))
 				.returning();
+			scheduleTailscaleReconciliation(
+				composeResult.environment.project.organizationId,
+			);
 
 			if (!IS_CLOUD) {
 				await cleanQueuesByCompose(input.composeId);

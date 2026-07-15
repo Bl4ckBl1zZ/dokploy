@@ -25,6 +25,7 @@ import {
 	Loader2,
 	LogIn,
 	type LucideIcon,
+	Network,
 	Package,
 	Palette,
 	PieChart,
@@ -357,6 +358,13 @@ const MENU: Menu = {
 			url: "/dashboard/settings/cloudflare",
 			icon: Cloud,
 			isEnabled: ({ permissions }) => !!permissions?.cloudflare?.read,
+		},
+		{
+			isSingle: true,
+			title: "Tailscale",
+			url: "/dashboard/settings/tailscale",
+			icon: Network,
+			isEnabled: ({ permissions }) => !!permissions?.tailscale?.read,
 		},
 		{
 			isSingle: true,
