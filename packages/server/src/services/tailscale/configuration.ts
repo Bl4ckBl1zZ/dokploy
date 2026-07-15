@@ -44,6 +44,18 @@ const discoverUnavailableCidrs = async (organizationId: string) => {
 	return knownCidrs;
 };
 
+const persistReconciliationFailure = async (
+	organizationId: string,
+	error: unknown,
+) => {
+	const message =
+		error instanceof Error ? error.message : "Initial reconciliation failed";
+	await db
+		.update(tailscaleConfig)
+		.set({ lastError: message.slice(0, 1000) })
+		.where(eq(tailscaleConfig.organizationId, organizationId));
+};
+
 export const connectTailscaleOrganization = async (
 	organizationId: string,
 	input: ConnectTailscaleInput,
@@ -95,14 +107,7 @@ export const connectTailscaleOrganization = async (
 		? { gateways: 0, endpoints: 0, status: "degraded" as const }
 		: await reconcileTailscaleOrganization(organizationId).catch(
 				async (error) => {
-					const message =
-						error instanceof Error
-							? error.message
-							: "Initial reconciliation failed";
-					await db
-						.update(tailscaleConfig)
-						.set({ lastError: message.slice(0, 1000) })
-						.where(eq(tailscaleConfig.organizationId, organizationId));
+					await persistReconciliationFailure(organizationId, error);
 					return { gateways: 0, endpoints: 0, status: "degraded" as const };
 				},
 			);
@@ -133,5 +138,8 @@ export const updateTailscaleTranslatedCidr = async (
 			message: "Tailscale is not configured",
 		});
 	}
+	await reconcileTailscaleOrganization(organizationId).catch((error) =>
+		persistReconciliationFailure(organizationId, error),
+	);
 	return updated;
 };

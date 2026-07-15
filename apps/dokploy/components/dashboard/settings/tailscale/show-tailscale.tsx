@@ -93,7 +93,6 @@ export const ShowTailscale = () => {
 	const updateTranslatedCidr = api.tailscale.updateTranslatedCidr.useMutation({
 		onSuccess: async () => {
 			toast.success("Private routing CIDR updated");
-			await reconcile.mutateAsync({});
 			await invalidate();
 		},
 		onError: (error) => toast.error(error.message),
