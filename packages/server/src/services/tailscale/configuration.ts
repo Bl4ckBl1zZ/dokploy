@@ -63,7 +63,7 @@ export const connectTailscaleOrganization = async (
 	const existing = await findTailscaleConfigForOrg(organizationId);
 	if (existing && existing.tailnet !== input.tailnet) {
 		throw new TRPCError({
-			code: "PRECONDITION_FAILED",
+			code: "FORBIDDEN",
 			message:
 				"Changing tailnets requires purging the retained Tailscale state first.",
 		});
@@ -122,7 +122,7 @@ export const updateTailscaleTranslatedCidr = async (
 	const knownCidrs = await discoverUnavailableCidrs(organizationId);
 	if (knownCidrs.some((known) => cidrsOverlap(translatedCidr, known))) {
 		throw new TRPCError({
-			code: "CONFLICT",
+			code: "FORBIDDEN",
 			message:
 				"The translated CIDR overlaps a known server route or Docker network",
 		});

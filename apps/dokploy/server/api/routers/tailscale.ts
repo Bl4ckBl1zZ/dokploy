@@ -34,7 +34,7 @@ const toTrpcError = (error: unknown) =>
 	error instanceof TRPCError
 		? error
 		: new TRPCError({
-				code: "BAD_REQUEST",
+				code: "INTERNAL_SERVER_ERROR",
 				message:
 					error instanceof Error ? error.message : "Tailscale operation failed",
 				cause: error,
