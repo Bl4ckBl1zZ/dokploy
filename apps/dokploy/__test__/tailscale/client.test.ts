@@ -1,6 +1,6 @@
 import {
-	TailscaleClient,
 	TailscaleApiError,
+	TailscaleClient,
 } from "@dokploy/server/services/tailscale/client";
 import { describe, expect, it, vi } from "vitest";
 
@@ -14,25 +14,28 @@ const json = (value: unknown, init?: ResponseInit) =>
 describe("Tailscale OAuth client", () => {
 	it("requests exact scopes/tags and validates one-use preauthorized keys", async () => {
 		const requests: Array<{ url: string; init?: RequestInit }> = [];
-		const fetchMock = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
-			const target = String(url);
-			requests.push({ url: target, init });
-			if (target.endsWith("/oauth/token")) {
-				return json({
-					access_token: "access-token",
-					expires_in: 3600,
-					scope: "auth_keys services devices:core",
-					token_type: "Bearer",
-				});
-			}
-			if (target.endsWith("/devices")) return json({ devices: [] });
-			if (target.endsWith("/services")) return json({ vipServices: [] });
-			if (target.endsWith("/keys") && init?.method === "POST") {
-				return json({ id: "key-id", key: "tskey-auth-secret" });
-			}
-			if (target.endsWith("/keys/key-id")) return new Response(null, { status: 204 });
-			throw new Error(`Unexpected request ${target}`);
-		}) as typeof fetch;
+		const fetchMock = vi.fn(
+			async (url: string | URL | Request, init?: RequestInit) => {
+				const target = String(url);
+				requests.push({ url: target, init });
+				if (target.endsWith("/oauth/token")) {
+					return json({
+						access_token: "access-token",
+						expires_in: 3600,
+						scope: "auth_keys services devices:core",
+						token_type: "Bearer",
+					});
+				}
+				if (target.endsWith("/devices")) return json({ devices: [] });
+				if (target.endsWith("/services")) return json({ vipServices: [] });
+				if (target.endsWith("/keys") && init?.method === "POST") {
+					return json({ id: "key-id", key: "tskey-auth-secret" });
+				}
+				if (target.endsWith("/keys/key-id"))
+					return new Response(null, { status: 204 });
+				throw new Error(`Unexpected request ${target}`);
+			},
+		) as typeof fetch;
 		const client = new TailscaleClient({
 			clientId: "client-id",
 			clientSecret: "client-secret",
@@ -46,12 +49,11 @@ describe("Tailscale OAuth client", () => {
 			tag: "tag:dokploy",
 		});
 		const tokenBody = requests[0]?.init?.body?.toString() ?? "";
-		expect(tokenBody).toContain(
-			"scope=auth_keys+services+devices%3Acore",
-		);
+		expect(tokenBody).toContain("scope=auth_keys+services+devices%3Acore");
 		expect(tokenBody).toContain("tags=tag%3Adokploy");
 		const keyRequest = requests.find(
-			(request) => request.url.endsWith("/keys") && request.init?.method === "POST",
+			(request) =>
+				request.url.endsWith("/keys") && request.init?.method === "POST",
 		);
 		const keyBody = JSON.parse(String(keyRequest?.init?.body));
 		expect(keyBody.capabilities.devices.create).toEqual({

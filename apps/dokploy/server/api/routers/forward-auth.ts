@@ -21,8 +21,8 @@ import {
 } from "@dokploy/server/db/schema";
 import { TRPCError } from "@trpc/server";
 import {
-	createTRPCRouter,
 	adminProcedure,
+	createTRPCRouter,
 	withPermission,
 } from "@/server/api/trpc";
 import { audit } from "@/server/api/utils/audit";
