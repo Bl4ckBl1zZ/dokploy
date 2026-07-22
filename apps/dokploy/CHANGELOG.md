@@ -1,3 +1,48 @@
+# [0.40.0](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.39.1...v0.40.0) (2026-07-22)
+
+
+### Bug Fixes
+
+* **2fa:** show correct error for invalid TOTP code ([6d65a36](https://github.com/Bl4ckBl1zZ/dokploy/commit/6d65a36aac8c7abd81874e2860a3c102609e06a6))
+* **ai:** only show Custom Presets button to owner/admin roles ([366e44b](https://github.com/Bl4ckBl1zZ/dokploy/commit/366e44b75a62c8df2ded805d35d1ac07d9820ca0))
+* **auth:** enable email verification for SSO and user creation ([e9b5166](https://github.com/Bl4ckBl1zZ/dokploy/commit/e9b51667e2b6cd742cc61df12730a4749ba8c185))
+* **compose:** preserve named-volume access mode when adding suffix ([bc22d05](https://github.com/Bl4ckBl1zZ/dokploy/commit/bc22d05f8dcc9f338e64c795cbee75989e8dc6e9)), closes [#4818](https://github.com/Bl4ckBl1zZ/dokploy/issues/4818)
+* rename compose "Reload" action to "Rebuild" ([15fe3b2](https://github.com/Bl4ckBl1zZ/dokploy/commit/15fe3b21c95d3ade145adae9de45ce36b3ae8ea0)), closes [#4666](https://github.com/Bl4ckBl1zZ/dokploy/issues/4666)
+* **schedule:** give scheduleType a clean enum type for the host-access gate ([8fe3294](https://github.com/Bl4ckBl1zZ/dokploy/commit/8fe3294a08fa0f4908ac9459fd4f465795eb489c))
+* **security:** authenticate and authorize the GitHub App setup callback ([5ae344d](https://github.com/Bl4ckBl1zZ/dokploy/commit/5ae344db5814bfdcd700c5cc8ee8eb1a23af7253))
+* **security:** authorize docker/terminal WebSocket handlers ([68f5afa](https://github.com/Bl4ckBl1zZ/dokploy/commit/68f5afae42fca353dcb3d3bc6219ffe9e168cb91))
+* **security:** base64-encode remote traefik YAML and escape config paths ([92310dd](https://github.com/Bl4ckBl1zZ/dokploy/commit/92310ddb143c8e67ca95eb7db661838a76579f2e))
+* **security:** check service access before server in wss authz, and pass serviceId from log views ([1e354a3](https://github.com/Bl4ckBl1zZ/dokploy/commit/1e354a3cf2b8123f13db880a5c5f33311a470635))
+* **security:** command injection in registry.testRegistry/testRegistryById remote path ([d3f522b](https://github.com/Bl4ckBl1zZ/dokploy/commit/d3f522b7a6f5100fc0fc0bff5851e48d11d459e2))
+* **security:** enforce org-scope on git provider read endpoints ([071d9ea](https://github.com/Bl4ckBl1zZ/dokploy/commit/071d9eacee9744f13193e92757a7fcd3bab0956a))
+* **security:** enforce org-scope on swarm reads and escape nodeId ([5563699](https://github.com/Bl4ckBl1zZ/dokploy/commit/5563699f71b2058b49eebdfd66c6c3dbd92ede9c))
+* **security:** enforce organization ownership on server.remove ([4aee66b](https://github.com/Bl4ckBl1zZ/dokploy/commit/4aee66b2d1dc2c027749a541e553aa49947075c1))
+* **security:** enforce owner/admin gate on host schedules regardless of service link ([1e3f10b](https://github.com/Bl4ckBl1zZ/dokploy/commit/1e3f10bd22c1c28a7b65a2d7ac15a0a5e47599eb))
+* **security:** escape compose path and validate custom compose command ([d48037a](https://github.com/Bl4ckBl1zZ/dokploy/commit/d48037a80203bb0ecaec4f5653aef75fcfdb656d))
+* **security:** escape dockerImage in database service remote docker pull ([b24202e](https://github.com/Bl4ckBl1zZ/dokploy/commit/b24202e69b244f0ece8d2f56e99cad9bb5e1a248))
+* **security:** escape file paths and remote schedule command in shell invocations ([16b5b72](https://github.com/Bl4ckBl1zZ/dokploy/commit/16b5b7293f9883327a89c69fcb6e5718767b064a))
+* **security:** escape S3/rclone args and restore paths to prevent command injection ([eeb6e7b](https://github.com/Bl4ckBl1zZ/dokploy/commit/eeb6e7b8ea88e4b4b1fac8460755464100516ac9))
+* **security:** escape swarm nodeId and registry tag in cluster commands ([df2779e](https://github.com/Bl4ckBl1zZ/dokploy/commit/df2779eaeb4a58f0c85d4caa713c776c790fa708))
+* **security:** escape user input in docker build/pull commands ([cba0b25](https://github.com/Bl4ckBl1zZ/dokploy/commit/cba0b253c7de4157dd932de7f16a2ad247c7cee9))
+* **security:** escape user input in git clone commands across all providers ([47347ab](https://github.com/Bl4ckBl1zZ/dokploy/commit/47347ab885b0ad1f5d0ef0e5e74bbba35c7f93bc))
+* **security:** pass db backup/restore identifiers via env vars to avoid injection ([ccd2e83](https://github.com/Bl4ckBl1zZ/dokploy/commit/ccd2e83c57d99f725220d37e0152270e0827d71b))
+* **security:** pass serviceId from the remaining terminal entry points ([79c9cf9](https://github.com/Bl4ckBl1zZ/dokploy/commit/79c9cf99e0812ea0e7abc197b2a7707c9500d870))
+* **security:** redact git provider secrets from application.one response ([68ea9f7](https://github.com/Bl4ckBl1zZ/dokploy/commit/68ea9f7771afe6acca57032dc4328f93c4f25999))
+* **security:** redact SSH private key from server read responses ([439eee4](https://github.com/Bl4ckBl1zZ/dokploy/commit/439eee45edf8cd4c0a886984b6115922c87ff4b2))
+* **security:** service access is authoritative for service-scoped wss ops ([eb1f11b](https://github.com/Bl4ckBl1zZ/dokploy/commit/eb1f11b908206c1f4bfe816db453dd7047ef63ed))
+* **security:** validate volumeName and escape volume-backup file names ([d629fae](https://github.com/Bl4ckBl1zZ/dokploy/commit/d629faebc6dcb9d4785f84bf30b2b285f9f59379))
+* **settings:** allow clearing the server domain ([d5dd35c](https://github.com/Bl4ckBl1zZ/dokploy/commit/d5dd35c8f89f74507a730f3077c630ebf5a66f5b)), closes [#4821](https://github.com/Bl4ckBl1zZ/dokploy/issues/4821)
+* **types:** guard git-provider access check for optional id in getBranches ([26cae3b](https://github.com/Bl4ckBl1zZ/dokploy/commit/26cae3b8a99b282c861feb7e99cda71ab35c96bb))
+* **ui:** disambiguate repos with the same name in the repository selector ([de62aff](https://github.com/Bl4ckBl1zZ/dokploy/commit/de62aff0fb6119c845ff4e4462ff012ffc8983b6)), closes [#4793](https://github.com/Bl4ckBl1zZ/dokploy/issues/4793)
+* **ui:** organization menu clipped when sidebar is collapsed ([3b102fa](https://github.com/Bl4ckBl1zZ/dokploy/commit/3b102fac560df934a20e1efc8f24ecc3e6dfbc99)), closes [#4840](https://github.com/Bl4ckBl1zZ/dokploy/issues/4840)
+* **ui:** typos ([12d3f18](https://github.com/Bl4ckBl1zZ/dokploy/commit/12d3f1871cf44e4fb2d8a7bd0249b21020c08a32))
+* validate API key name length to prevent opaque 500 ([f577778](https://github.com/Bl4ckBl1zZ/dokploy/commit/f577778667ec40242060ca29d86c5fbdfcabd31f)), closes [#4798](https://github.com/Bl4ckBl1zZ/dokploy/issues/4798)
+
+
+### Features
+
+* **ai:** allow organizations to define custom AI provider presets ([7ba3853](https://github.com/Bl4ckBl1zZ/dokploy/commit/7ba3853bab2c86713aa56dd11d2ec59905a2a7ab))
+
 ## [0.39.1](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.39.0...v0.39.1) (2026-07-15)
 
 
