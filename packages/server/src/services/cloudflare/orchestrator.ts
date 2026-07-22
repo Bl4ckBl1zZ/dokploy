@@ -740,17 +740,12 @@ export const unsyncDomain = async (domainId: string): Promise<void> => {
 	}
 };
 
-const unsyncDomainsBestEffort = async (
-	domainIds: string[],
-): Promise<void> => {
+const unsyncDomainsBestEffort = async (domainIds: string[]): Promise<void> => {
 	for (const domainId of domainIds) {
 		try {
 			await unsyncDomain(domainId);
 		} catch (err) {
-			console.warn(
-				`Cloudflare unsync failed for domain ${domainId}:`,
-				err,
-			);
+			console.warn(`Cloudflare unsync failed for domain ${domainId}:`, err);
 		}
 	}
 };

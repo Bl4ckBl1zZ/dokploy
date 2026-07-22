@@ -163,8 +163,7 @@ export function RegisterSamlDialog({
 
 	const onSubmit = async (data: SamlProviderForm) => {
 		const resolvedBaseURL =
-			baseURL ||
-			(typeof window !== "undefined" ? window.location.origin : "");
+			baseURL || (typeof window !== "undefined" ? window.location.origin : "");
 		if (!resolvedBaseURL) {
 			toast.error("Cannot determine application base URL");
 			return;

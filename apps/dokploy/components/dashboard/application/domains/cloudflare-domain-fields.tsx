@@ -101,7 +101,10 @@ export const CloudflareDomainFields = ({
 
 	useEffect(() => {
 		if (mode === "cloudflare" && activeZone && fullHost) {
-			if (cloudflareZoneId === activeZone.cloudflareZoneId && host === fullHost) {
+			if (
+				cloudflareZoneId === activeZone.cloudflareZoneId &&
+				host === fullHost
+			) {
 				return;
 			}
 			onChangeRef.current({

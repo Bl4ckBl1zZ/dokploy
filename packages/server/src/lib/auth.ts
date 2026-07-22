@@ -409,7 +409,7 @@ const createBetterAuth = () =>
 				enableMetadata: true,
 				references: "user",
 			}),
-			sso(),
+			sso({ trustEmailVerified: true }),
 			scim(),
 			twoFactor(),
 			organization({

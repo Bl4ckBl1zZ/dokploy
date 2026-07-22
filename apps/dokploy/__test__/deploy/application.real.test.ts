@@ -17,6 +17,7 @@ vi.mock("@dokploy/server/db", () => {
 			returning: vi.fn().mockResolvedValue([{}]),
 			from: vi.fn(() => chain),
 			innerJoin: vi.fn(() => chain),
+			// biome-ignore lint/suspicious/noThenProperty: the database query mock must be thenable
 			then: (resolve: (v: any) => void) => {
 				resolve([]);
 			},
