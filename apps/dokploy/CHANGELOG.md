@@ -1,3 +1,10 @@
+## [0.40.1](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.40.0...v0.40.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* prevent environment form from resetting while editing ([86ea311](https://github.com/Bl4ckBl1zZ/dokploy/commit/86ea311714e2ccb057f59b2bef7ac962306acdc0))
+
 # [0.40.0](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.39.1...v0.40.0) (2026-07-22)
 
 
