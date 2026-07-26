@@ -6,7 +6,7 @@ on:
 jobs:
   validate:
     name: Validate Halifax runner
-    runs-on: [self-hosted, "halifax-xeqxnnfmyibibj5c"]
+    runs-on: [self-hosted, "halifax-bl4ckbl1zz-dokploy-b14a8f16"]
     timeout-minutes: 10
     steps:
       - name: Verify disposable runner
