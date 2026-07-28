@@ -33,6 +33,8 @@ const baseApp: ApplicationNested = {
 	applicationId: "",
 	previewLabels: [],
 	tailscalePreviewEnabled: false,
+	networkIds: [],
+	detachDokployNetwork: false,
 	createEnvFile: true,
 	bitbucketRepositorySlug: "",
 	herokuVersion: "",

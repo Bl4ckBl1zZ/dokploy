@@ -573,7 +573,6 @@ export const generateConfigContainer = (
 		labelsSwarm,
 		replicas,
 		mounts,
-		networkSwarm,
 		stopGracePeriodSwarm,
 		endpointSpecSwarm,
 		ulimitsSwarm,
@@ -636,13 +635,6 @@ export const generateConfigContainer = (
 			stopGracePeriodSwarm !== undefined && {
 				StopGracePeriod: stopGracePeriodSwarm,
 			}),
-		...(networkSwarm
-			? {
-					Networks: networkSwarm,
-				}
-			: {
-					Networks: [{ Target: "dokploy-network" }],
-				}),
 		...(endpointSpecSwarm && {
 			EndpointSpec: {
 				...(endpointSpecSwarm.Mode && { Mode: endpointSpecSwarm.Mode }),

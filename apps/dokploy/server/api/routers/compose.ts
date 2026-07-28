@@ -1013,7 +1013,6 @@ export const composeRouter = createTRPCRouter({
 					composeFile: templateData.compose,
 					sourceType: "raw",
 					env: processedTemplate.envs?.join("\n"),
-					isolatedDeployment: true,
 				});
 
 				if (processedTemplate.mounts && processedTemplate.mounts.length > 0) {

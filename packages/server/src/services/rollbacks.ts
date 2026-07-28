@@ -20,6 +20,7 @@ import { getRemoteDocker } from "../utils/servers/remote-docker";
 import { type Application, findApplicationById } from "./application";
 import { findDeploymentById } from "./deployment";
 import type { Mount } from "./mount";
+import { resolveServiceNetworks } from "./network";
 import type { Port } from "./port";
 import type { Project } from "./project";
 import {
@@ -258,6 +259,10 @@ const rollbackApplication = async (
 
 	const volumesMount = generateVolumeMounts(mounts);
 
+	const resolvedNetworks = await resolveServiceNetworks(
+		fullContext as Parameters<typeof resolveServiceNetworks>[0],
+	);
+
 	const {
 		HealthCheck,
 		RestartPolicy,
@@ -266,7 +271,6 @@ const rollbackApplication = async (
 		Mode,
 		RollbackConfig,
 		UpdateConfig,
-		Networks,
 		Ulimits,
 	} = generateConfigContainer(
 		fullContext as Parameters<typeof generateConfigContainer>[0],
@@ -310,7 +314,7 @@ const rollbackApplication = async (
 				...(Ulimits && { Ulimits }),
 				Labels,
 			},
-			Networks,
+			Networks: resolvedNetworks,
 			RestartPolicy,
 			Placement,
 			Resources: {
