@@ -1,3 +1,31 @@
+# [0.41.0](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.40.1...v0.41.0) (2026-07-30)
+
+
+### Bug Fixes
+
+* avoid postgres 100-argument limit in findRollbackById ([4ba7972](https://github.com/Bl4ckBl1zZ/dokploy/commit/4ba7972ffa6dd0e70ae6078f0788cf61f2c894c5)), closes [#4257](https://github.com/Bl4ckBl1zZ/dokploy/issues/4257)
+* avoid postgres 100-argument limit in schedule, volume backup and port queries ([7047e4f](https://github.com/Bl4ckBl1zZ/dokploy/commit/7047e4f199ae494b3176d5d79314561ab3edaeca))
+* **domains:** don't render CDN info message as an error in DNS tooltip ([8f0702c](https://github.com/Bl4ckBl1zZ/dokploy/commit/8f0702c4da91074b9ccdcb81fec6cba979d70a86)), closes [#4910](https://github.com/Bl4ckBl1zZ/dokploy/issues/4910)
+* enhance server validation in createNetwork function ([d542972](https://github.com/Bl4ckBl1zZ/dokploy/commit/d542972522bda896c0de791bfc29c68e9686a9b0))
+* **ui:** make interactive icons inside badges clickable again ([268fd7d](https://github.com/Bl4ckBl1zZ/dokploy/commit/268fd7d7716a72134fc3f553b0d9c4776430c0d4))
+
+
+### Features
+
+* add network management schema and update related tables ([5f50816](https://github.com/Bl4ckBl1zZ/dokploy/commit/5f508163e55f97380e001a0445d674a5fadd679f))
+* add networkIds column to multiple database tables ([efcad7b](https://github.com/Bl4ckBl1zZ/dokploy/commit/efcad7bbf587713248ff36d877206819b1ce6866))
+* add new test ([ec74035](https://github.com/Bl4ckBl1zZ/dokploy/commit/ec74035c7030f96fbf42b4c4c25154403832faaf))
+* **api:** enhance OpenAPI schema for application endpoints and network validation ([d768adb](https://github.com/Bl4ckBl1zZ/dokploy/commit/d768adb6adb2c7ccd547d19048610f10ba8cb372))
+* **audit:** integrate auditing for network operations ([29fcc74](https://github.com/Bl4ckBl1zZ/dokploy/commit/29fcc74ca5d3b2dc9ea0f3b1fdbb291ce5881b51))
+* create network table and update related schemas ([e7c38d4](https://github.com/Bl4ckBl1zZ/dokploy/commit/e7c38d4c548694f74e3e68e998704526b00ca22c))
+* **icon:** enhance icon management for services ([6e1d020](https://github.com/Bl4ckBl1zZ/dokploy/commit/6e1d0207695ab70be35645baecca20634755b85d))
+* implement Docker network management functionality ([6959882](https://github.com/Bl4ckBl1zZ/dokploy/commit/69598821ed33da85e0fab18c930dc6c638fa88cc))
+* **network:** add network management schema and update related tables ([99e483c](https://github.com/Bl4ckBl1zZ/dokploy/commit/99e483c1a18b648b46b1de25098c5a7db0dc895a))
+* **networks:** add network configuration viewer and enhance network actions ([c578c18](https://github.com/Bl4ckBl1zZ/dokploy/commit/c578c185006aa68b06efc9f596acb4586234c8e7))
+* **networks:** enhance network management and UI components ([97885ee](https://github.com/Bl4ckBl1zZ/dokploy/commit/97885ee44a80ddda8f635d57534b02b34c070c85))
+* **networks:** enhance network management with server filtering and synchronization ([adcbd6f](https://github.com/Bl4ckBl1zZ/dokploy/commit/adcbd6fd8e6507e3f2f46f5f7d04e9c77e1bf98c))
+* **networks:** implement network recreation functionality and enhance synchronization ([8a37626](https://github.com/Bl4ckBl1zZ/dokploy/commit/8a376266369dcdf2e8473429a5464213ac6c7f08))
+
 ## [0.40.1](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.40.0...v0.40.1) (2026-07-23)
 
 
