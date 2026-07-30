@@ -47,7 +47,7 @@ export const DrawerLogs = ({ isOpen, onClose, filteredLogs }: Props) => {
 				onClose();
 			}}
 		>
-			<SheetContent className="sm:max-w-[740px] flex w-[95vw] max-w-[95vw] flex-col">
+			<SheetContent className="flex w-[95vw] max-w-[95vw] flex-col sm:max-w-[740px]!">
 				<SheetHeader>
 					<SheetTitle>Deployment Logs</SheetTitle>
 					<SheetDescription>Details of the request log entry.</SheetDescription>

@@ -211,6 +211,20 @@ const MENU: Menu = {
 		},
 		{
 			isSingle: true,
+			title: "Networks",
+			url: "/dashboard/networks",
+			icon: Network,
+			// Only enabled for admins and users with access to Docker in non-cloud environments
+			isEnabled: ({ auth, isCloud }) =>
+				!!(
+					(auth?.role === "owner" ||
+						auth?.role === "admin" ||
+						auth?.canAccessToDocker) &&
+					!isCloud
+				),
+		},
+		{
+			isSingle: true,
 			title: "Requests",
 			url: "/dashboard/requests",
 			icon: Forward,

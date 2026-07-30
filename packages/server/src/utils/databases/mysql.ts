@@ -1,6 +1,7 @@
 import { getPrivateEnvironmentContext } from "@dokploy/server/services/tailscale/environment";
 import type { InferResultType } from "@dokploy/server/types/with";
 import type { CreateServiceOptions } from "dockerode";
+import { resolveServiceNetworks } from "../../services/network";
 import {
 	calculateResources,
 	generateBindMounts,
@@ -44,6 +45,8 @@ export const buildMysql = async (mysql: MysqlNested) => {
 					env ? `\n${env}` : ""
 				}`;
 
+	const resolvedNetworks = await resolveServiceNetworks(mysql);
+
 	const {
 		HealthCheck,
 		RestartPolicy,
@@ -52,7 +55,6 @@ export const buildMysql = async (mysql: MysqlNested) => {
 		Mode,
 		RollbackConfig,
 		UpdateConfig,
-		Networks,
 		StopGracePeriod,
 		EndpointSpec,
 		Ulimits,
@@ -98,7 +100,7 @@ export const buildMysql = async (mysql: MysqlNested) => {
 				...(Ulimits && { Ulimits }),
 				Labels,
 			},
-			Networks,
+			Networks: resolvedNetworks,
 			RestartPolicy,
 			Placement,
 			Resources: {
