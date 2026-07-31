@@ -1,3 +1,10 @@
+## [0.41.1](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.41.0...v0.41.1) (2026-07-31)
+
+
+### Bug Fixes
+
+* **ui:** persist trigger type selection in GitHub provider forms ([18618e7](https://github.com/Bl4ckBl1zZ/dokploy/commit/18618e73e1fff58f0511a1abd2eaf6321abbb4ae))
+
 # [0.41.0](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.40.1...v0.41.0) (2026-07-30)
 
 
