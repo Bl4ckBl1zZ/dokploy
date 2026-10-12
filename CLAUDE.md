@@ -22,7 +22,10 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 
 - **Applications**: Deploy Node.js, PHP, Python, Go, Ruby, Java, etc. from Git or Docker images with build logs, rollback, and preview deployments.
 - **Databases**: Managed PostgreSQL, MySQL, MariaDB, MongoDB, Redis, and LibSQL services.
-- **Docker Compose**: Native multi-service deployments from compose files.
+- **Docker Compose**: Native multi-service deployments from compose files; optional `.env` file generation, pull-images-before-deploy, and fresh-volume redeploys.
+- **Overview**: Cross-project dashboard of all services the user can access (`/dashboard/overview`).
+- **Service Transfer**: Move applications, databases, and compose services between servers.
+- **Service Icons**: Custom icons for services and compose templates.
 - **Backups & Restore**: Scheduled backups for all DB types to S3-compatible destinations with retention policies.
 - **Volume Backups**: Snapshot/restore of Docker volumes.
 - **Multi-Server / Multi-Node**: SSH-managed remote servers and Docker Swarm clusters.
@@ -35,11 +38,14 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Git Providers**: GitHub (App + webhooks), GitLab, Gitea, Bitbucket OAuth + webhook integrations.
 - **Cloudflare Integration**: Org-level CF token + multi-zone configuration; per-server auto-provisioned remotely-managed Cloudflare Tunnels (cloudflared installed via SSH on server bootstrap, dokploy-tunnel systemd unit); CF-managed domains create/update/delete CNAMEs and tunnel ingress automatically; one-way reconcile pushes Dokploy DB state to Cloudflare. CF settings live under Settings → Cloudflare. Permission: `cloudflare` resource (free-tier, sibling of `gitProviders`).
 - **Domains & SSL**: Multi-domain per service, Let's Encrypt, custom certs, redirects.
-- **Environment Variables**: Per-service and inherited from project/environment, secure storage.
+- **Environment Variables**: Per-service and inherited from project/environment, secure storage, editor autocomplete.
+- **Secrets (Vault Providers)**: Org-level external secret stores (HashiCorp Vault, Infisical, AWS Secrets Manager, AWS Parameter Store, Doppler, Azure Key Vault, Scaleway, Phase) referenced from env vars via `${{vault.…}}`. Settings → Secrets; permission `vaultProvider`.
+- **DNS Providers**: Org-level DNS provider credentials (Cloudflare, Route 53, Porkbun, Infomaniak, OVH) for DNS record management on domains. Settings → DNS Providers; permission `dnsProvider`. Separate from the fork's Cloudflare Tunnel integration.
 - **Volumes & Mounts**: Persistent + bind mounts.
 - **CLI/API**: tRPC + OpenAPI (`@dokploy/trpc-openapi`) for programmatic management; Swagger UI at `/swagger`.
 - **AI Configuration**: Multi-provider LLM integration (Anthropic, OpenAI, Azure, Cohere, Mistral, DeepInfra, Ollama) for assistance features.
-- **Users / Teams / Orgs**: Multi-tenant orgs, RBAC (owner/admin/member + custom roles), invitations.
+- **Users / Teams / Orgs**: Multi-tenant orgs, RBAC (owner/admin/member + custom roles, per-org default role, `server.terminal` permission), invitations, onboarding wizard for new users, self-service account deletion.
+- **Sessions & Passkeys**: Active session management (Settings → Sessions) and WebAuthn passkey sign-in (`@better-auth/passkey`).
 - **Audit Logs**: Compliance trail.
 - **SSO**: SAML/OIDC.
 - **Whitelabeling**: Custom branding.
@@ -72,18 +78,18 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Imports**: Absolute imports via path aliases for cross-directory references; relative only inside the same feature folder. Biome auto-organizes imports on save (`organizeImports: "on"`).
 - **React components**: Functional components only. Use `React.forwardRef<...>` with explicit generics for primitives that pass refs; otherwise plain function components. **Named exports** preferred. Avoid `React.FC` in new code.
 - **Style rules enforced by Biome**: `useAsConstAssertion`, `useDefaultParameterLast`, `useEnumInitializers`, `useSelfClosingElements`, `noInferrableTypes`, `noUselessElse`. `noUnusedImports` and `noUnusedFunctionParameters` are errors.
-- **Formatter / Linter**: Biome 2.1.1 (replaces ESLint + Prettier). Run `pnpm format-and-lint:fix` to autoformat. Biome's defaults are used (tab indentation per `.editorconfig` / Biome defaults).
+- **Formatter / Linter**: Biome 2.5.7 (replaces ESLint + Prettier). Run `pnpm format-and-lint:fix` to autoformat. Biome's defaults are used (tab indentation per `.editorconfig` / Biome defaults).
 
 ## Tech Stack
 
-- **Framework (frontend)**: Next.js 16.2.0 (Pages Router), React 18.2.0
+- **Framework (frontend)**: Next.js 16.3.4 (Pages Router), React 18.2.0
 - **Frameworks (microservices)**: Hono 4.11 (`apps/api`, `apps/schedules`)
-- **Language**: TypeScript 5.8.3 (Node 24.4.0+)
+- **Language**: TypeScript 7 (Node 24.4.0+)
 - **Styling**: Tailwind CSS 3.4.17 with `tailwindcss-animate`, `@tailwindcss/typography`, `tailwind-merge`, `class-variance-authority`, `clsx`. Theme via CSS variables (HSL); base color `zinc`. Dark mode via `next-themes` 0.2.1.
 - **UI Components**: shadcn/ui (Radix UI primitives) — ~44 components in `apps/dokploy/components/ui/`. Icon library: `lucide-react` 0.469.0. Code editor: `@uiw/react-codemirror`. Terminal: `xterm` + `@xterm/addon-attach`. Toasts: `sonner` 1.7.4.
 - **Backend**: tRPC 11 server in `apps/dokploy/server/`, business logic in `packages/server/`. Standalone Hono services for API gateway and BullMQ job scheduler.
 - **Database**: PostgreSQL via `postgres` driver 3.4.4. **ORM**: Drizzle 0.45.1 + drizzle-kit 0.31.4. Schema lives in `packages/server/src/db/schema/`. Migrations: schema-first, runtime via `apps/dokploy/migration.ts`.
-- **Auth**: `better-auth` 1.5.4 with `@better-auth/sso`, `@better-auth/api-key`, organization plugin, 2FA. Password hashing: `bcrypt`. Crypto: `@oslojs/crypto`.
+- **Auth**: `better-auth` 1.6.23 with `@better-auth/sso`, `@better-auth/api-key`, `@better-auth/passkey`, organization plugin, 2FA. Password hashing: `bcrypt`. Crypto: `@oslojs/crypto`.
 - **API**: tRPC 11.10 (`@trpc/server`, `@trpc/client`, `@trpc/next`, `@trpc/react-query`) + `@dokploy/trpc-openapi` 0.0.18 for OpenAPI generation. SuperJSON serialization. Validation via `zod` 4.3.6 + `drizzle-zod` 0.8.3.
 - **Forms**: `react-hook-form` 7.71 + `@hookform/resolvers` (zod / standard-schema resolver).
 - **State / Data**: `@tanstack/react-query` 5.90 (via tRPC), `@tanstack/react-table` 8.21.
@@ -94,8 +100,8 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Payments**: `stripe` 17.2 + `@stripe/stripe-js` 4.8 (cloud only).
 - **AI SDKs**: Vercel `ai` 6.0 + `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/azure`, `@ai-sdk/cohere`, `@ai-sdk/mistral`, `@ai-sdk/deepinfra`, `@ai-sdk/openai-compatible`, `ai-sdk-ollama`.
 - **Bundling**: `esbuild` 0.20.2 (server bundles via `esbuild.config.ts`), `tsx` 4.16 (TS execution), `tsc-alias` (path alias resolution at build time).
-- **Linter / Formatter**: Biome 2.1.1.
-- **Testing**: Vitest 4.0.18 (test fixtures in `apps/dokploy/__test__/`).
+- **Linter / Formatter**: Biome 2.5.7.
+- **Testing**: Vitest 4.1 (test fixtures in `apps/dokploy/__test__/`).
 - **Logging**: `pino` 9.4 + `pino-pretty`.
 - **Package Manager**: pnpm 10.22.0 (workspaces).
 
@@ -191,8 +197,8 @@ istanbul-v3/
 
 - **Sidebar** (`apps/dokploy/components/layouts/side.tsx` + `components/ui/sidebar.tsx`): `SidebarProvider` context wraps the dashboard. Collapsible on desktop (toggle: ⌘B), Sheet overlay on mobile. State persisted in `sidebar:state` cookie (7-day TTL). Structure: Header → Content (groups w/ `SidebarMenu` + `SidebarMenuSub`) → Footer.
 - **Sections (sidebar)**:
-  - **Home**: Home, Projects, Deployments, Monitoring*, Schedules*, Traefik FS*, Docker*, Swarm*, Requests* (* = self-hosted only).
-  - **Settings**: Web Server*, Profile, Remote Servers, Users, Audit Logs, SSH Keys, AI, Tags, Git Providers, Registry, Destinations, Certificates, Cluster*, Notifications, Billing (cloud), SSO (admin), Whitelabeling (owner).
+  - **Home**: Home, Projects, Overview, Monitoring*, Schedules*, Traefik FS*, Docker*, Requests* (* = self-hosted only).
+  - **Settings**: Web Server*, Profile, Sessions, Remote Servers, Deployments, Users, Audit Logs, SSH Keys, AI, Tags, Git, Cloudflare, Tailscale, Registry, Secrets, DNS Providers, S3 Destinations, Certificates, Notifications, Billing (cloud), SSO (admin), Whitelabeling (owner).
   - **Help**: Documentation, Support Discord (external links).
 - **Top of page**: Breadcrumb trail (`components/shared/breadcrumb-sidebar.tsx`, `advance-breadcrumb.tsx`) + `UserNav` with theme toggle.
 

@@ -40,6 +40,7 @@ const baseDomain: Domain = {
 	cloudflareSyncStatus: null,
 	cloudflareSyncedAt: null,
 	cloudflareSyncError: null,
+	enabled: true,
 };
 
 describe("forwardAuthMiddlewareName", () => {

@@ -157,6 +157,7 @@ const baseDomain: Domain = {
 	cloudflareSyncStatus: null,
 	cloudflareSyncedAt: null,
 	cloudflareSyncError: null,
+	enabled: true,
 };
 
 const baseRedirect: Redirect = {

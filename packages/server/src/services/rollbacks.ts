@@ -17,8 +17,10 @@ import {
 } from "../utils/docker/utils";
 import { execAsync, execAsyncRemote } from "../utils/process/execAsync";
 import { getRemoteDocker } from "../utils/servers/remote-docker";
+import { withResolvedVaultRefs } from "../utils/vault";
 import { type Application, findApplicationById } from "./application";
 import { findDeploymentById } from "./deployment";
+import type { Environment } from "./environment";
 import type { Mount } from "./mount";
 import { resolveServiceNetworks } from "./network";
 import type { Port } from "./port";
@@ -203,7 +205,7 @@ const rollbackApplication = async (
 	image: string,
 	serverId?: string | null,
 	fullContext?: Application & {
-		environment: {
+		environment: Environment & {
 			project: Project;
 		};
 		mounts: Mount[];
@@ -215,7 +217,9 @@ const rollbackApplication = async (
 		throw new Error("Full context is required for rollback");
 	}
 
-	const rollbackRegistry = fullContext.rollbackRegistry ?? undefined;
+	const resolvedContext = await withResolvedVaultRefs(fullContext);
+
+	const rollbackRegistry = resolvedContext.rollbackRegistry ?? undefined;
 
 	// Ensure Docker daemon is authenticated with the rollback registry
 	// before updating the swarm service. The authconfig in CreateServiceOptions
@@ -236,7 +240,7 @@ const rollbackApplication = async (
 		cpuReservation,
 		command,
 		ports,
-	} = fullContext;
+	} = resolvedContext;
 
 	const resources = calculateResources({
 		memoryLimit,
@@ -248,7 +252,7 @@ const rollbackApplication = async (
 	const volumesMount = generateVolumeMounts(mounts);
 
 	const resolvedNetworks = await resolveServiceNetworks(
-		fullContext as Parameters<typeof resolveServiceNetworks>[0],
+		resolvedContext as Parameters<typeof resolveServiceNetworks>[0],
 	);
 
 	const {
@@ -261,17 +265,17 @@ const rollbackApplication = async (
 		UpdateConfig,
 		Ulimits,
 	} = generateConfigContainer(
-		fullContext as Parameters<typeof generateConfigContainer>[0],
+		resolvedContext as Parameters<typeof generateConfigContainer>[0],
 	);
 
 	const bindsMount = generateBindMounts(mounts);
 	const envVariables = prepareEnvironmentVariables(
 		env,
-		fullContext.environment.project.env,
-		undefined,
+		resolvedContext.environment.project.env,
+		resolvedContext.environment.env,
 		await getPrivateEnvironmentContext(
-			fullContext.environment.project.projectId,
-			fullContext.appName,
+			resolvedContext.environment.project.projectId,
+			resolvedContext.appName,
 		),
 	);
 
