@@ -518,15 +518,14 @@ export const ShowPreviewSettings = ({ applicationId }: Props) => {
 										title="Build-time Arguments"
 										description={
 											<span>
-												Arguments are available only at build-time. See
-												documentation&nbsp;
+												Arguments are available only at build-time. See the
 												<a
 													className="text-primary"
 													href="https://docs.docker.com/build/building/variables/"
 													target="_blank"
 													rel="noopener noreferrer"
 												>
-													here
+													Docker build variables documentation
 												</a>
 												.
 											</span>
@@ -541,15 +540,14 @@ export const ShowPreviewSettings = ({ applicationId }: Props) => {
 										description={
 											<span>
 												Secrets are specially designed for sensitive information
-												and are only available at build-time. See
-												documentation&nbsp;
+												and are only available at build-time. See the
 												<a
 													className="text-primary"
 													href="https://docs.docker.com/build/building/secrets/"
 													target="_blank"
 													rel="noopener noreferrer"
 												>
-													here
+													Docker build secrets documentation
 												</a>
 												.
 											</span>
