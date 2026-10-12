@@ -1,4 +1,8 @@
-import { getWebServerSettings, updateWebServerSettings } from "@dokploy/server";
+import {
+	getPublicWhitelabelingConfig,
+	getWebServerSettings,
+	updateWebServerSettings,
+} from "@dokploy/server";
 import { TRPCError } from "@trpc/server";
 import { apiUpdateWhitelabeling } from "@/server/db/schema";
 import {
@@ -7,6 +11,11 @@ import {
 	protectedProcedure,
 	publicProcedure,
 } from "../trpc";
+
+/** Invalidate the SSR branding caches in _document.tsx so the next request picks up fresh settings. */
+function clearBrandingSSRCache() {
+	globalThis.__SETTINGS_CACHE = null;
+}
 
 export const whitelabelingRouter = createTRPCRouter({
 	get: protectedProcedure.query(async () => {
@@ -27,6 +36,9 @@ export const whitelabelingRouter = createTRPCRouter({
 			await updateWebServerSettings({
 				whitelabelingConfig: input.whitelabelingConfig,
 			});
+
+			// Clear the cache so Next.js SSR applies changes immediately
+			clearBrandingSSRCache();
 
 			return { success: true };
 		}),
@@ -51,32 +63,18 @@ export const whitelabelingRouter = createTRPCRouter({
 				docsUrl: null,
 				errorPageTitle: null,
 				errorPageDescription: null,
-				metaTitle: null,
+				ogImageUrl: null,
 				footerText: null,
 			},
 		});
+
+		// Clear the cache so Next.js SSR applies changes immediately
+		clearBrandingSSRCache();
 
 		return { success: true };
 	}),
 
 	// Public endpoint only for unauthenticated pages (login, register, error)
 	// Returns only the fields needed for public pages
-	getPublic: publicProcedure.query(async () => {
-		const settings = await getWebServerSettings();
-		const config = settings?.whitelabelingConfig;
-		if (!config) return null;
-
-		return {
-			appName: config.appName,
-			appDescription: config.appDescription,
-			logoUrl: config.logoUrl,
-			loginLogoUrl: config.loginLogoUrl,
-			faviconUrl: config.faviconUrl,
-			customCss: config.customCss,
-			metaTitle: config.metaTitle,
-			errorPageTitle: config.errorPageTitle,
-			errorPageDescription: config.errorPageDescription,
-			footerText: config.footerText,
-		};
-	}),
+	getPublic: publicProcedure.query(() => getPublicWhitelabelingConfig()),
 });

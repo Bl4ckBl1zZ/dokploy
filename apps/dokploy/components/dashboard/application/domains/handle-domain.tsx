@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/tooltip";
 import { api } from "@/utils/api";
 import { CloudflareDomainFields } from "./cloudflare-domain-fields";
+import { COMPOSE_REDEPLOY_TOAST, ComposeRedeployAlert } from "./redeploy-hint";
 
 export type CacheType = "fetch" | "cache";
 
@@ -166,7 +167,7 @@ export const AddDomain = ({ id, type, domainId = "", children }: Props) => {
 			domainId,
 		},
 		{
-			enabled: !!domainId,
+			enabled: isOpen && !!domainId,
 		},
 	);
 
@@ -177,7 +178,7 @@ export const AddDomain = ({ id, type, domainId = "", children }: Props) => {
 						applicationId: id,
 					},
 					{
-						enabled: !!id,
+						enabled: isOpen && !!id,
 					},
 				)
 			: api.compose.one.useQuery(
@@ -185,7 +186,7 @@ export const AddDomain = ({ id, type, domainId = "", children }: Props) => {
 						composeId: id,
 					},
 					{
-						enabled: !!id,
+						enabled: isOpen && !!id,
 					},
 				);
 
@@ -197,9 +198,14 @@ export const AddDomain = ({ id, type, domainId = "", children }: Props) => {
 		api.domain.generateDomain.useMutation();
 
 	const { data: canGenerateTraefikMeDomains } =
-		api.domain.canGenerateTraefikMeDomains.useQuery({
-			serverId: application?.serverId || "",
-		});
+		api.domain.canGenerateTraefikMeDomains.useQuery(
+			{
+				serverId: application?.serverId || "",
+			},
+			{
+				enabled: isOpen,
+			},
+		);
 	const cannotGenerateSslipDomains =
 		canGenerateTraefikMeDomains !== undefined && !canGenerateTraefikMeDomains;
 
@@ -216,7 +222,7 @@ export const AddDomain = ({ id, type, domainId = "", children }: Props) => {
 		{
 			retry: false,
 			refetchOnWindowFocus: false,
-			enabled: type === "compose" && !!id,
+			enabled: isOpen && type === "compose" && !!id,
 		},
 	);
 
@@ -316,7 +322,12 @@ export const AddDomain = ({ id, type, domainId = "", children }: Props) => {
 			customEntrypoint: data.useCustomEntrypoint ? data.customEntrypoint : null,
 		})
 			.then(async () => {
-				toast.success(dictionary.success);
+				toast.success(
+					dictionary.success,
+					data.domainType === "compose"
+						? { description: COMPOSE_REDEPLOY_TOAST }
+						: undefined,
+				);
 
 				if (data.domainType === "application") {
 					await utils.domain.byApplicationId.invalidate({
@@ -353,12 +364,7 @@ export const AddDomain = ({ id, type, domainId = "", children }: Props) => {
 				</DialogHeader>
 				{isError && <AlertBlock type="error">{error?.message}</AlertBlock>}
 
-				{type === "compose" && (
-					<AlertBlock type="info" className="mb-4">
-						Whenever you make changes to domains, remember to redeploy your
-						compose to apply the changes.
-					</AlertBlock>
-				)}
+				{type === "compose" && <ComposeRedeployAlert className="mb-4" />}
 
 				<Form {...form}>
 					<form

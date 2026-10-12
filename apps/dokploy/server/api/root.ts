@@ -12,7 +12,11 @@ import { composeRouter } from "./routers/compose";
 import { customRoleRouter } from "./routers/custom-role";
 import { deploymentRouter } from "./routers/deployment";
 import { destinationRouter } from "./routers/destination";
+import { dnsProviderRouter } from "./routers/dns-provider";
 import { dockerRouter } from "./routers/docker";
+import { dockerDiskUsageRouter } from "./routers/docker-disk-usage";
+import { dockerImageRouter } from "./routers/docker-image";
+import { dockerVolumeRouter } from "./routers/docker-volume";
 import { domainRouter } from "./routers/domain";
 import { environmentRouter } from "./routers/environment";
 import { forwardAuthRouter } from "./routers/forward-auth";
@@ -28,6 +32,7 @@ import { mysqlRouter } from "./routers/mysql";
 import { networkRouter } from "./routers/network";
 import { notificationRouter } from "./routers/notification";
 import { organizationRouter } from "./routers/organization";
+import { overviewRouter } from "./routers/overview";
 import { patchRouter } from "./routers/patch";
 import { portRouter } from "./routers/port";
 import { postgresRouter } from "./routers/postgres";
@@ -48,7 +53,9 @@ import { stripeRouter } from "./routers/stripe";
 import { swarmRouter } from "./routers/swarm";
 import { tagRouter } from "./routers/tag";
 import { tailscaleRouter } from "./routers/tailscale";
+import { transferRouter } from "./routers/transfer";
 import { userRouter } from "./routers/user";
+import { vaultProviderRouter } from "./routers/vault-provider";
 import { volumeBackupsRouter } from "./routers/volume-backups";
 import { whitelabelingRouter } from "./routers/whitelabeling";
 /**
@@ -69,7 +76,11 @@ export const appRouter = createTRPCRouter({
 	compose: composeRouter,
 	deployment: deploymentRouter,
 	destination: destinationRouter,
+	dnsProvider: dnsProviderRouter,
 	docker: dockerRouter,
+	dockerDiskUsage: dockerDiskUsageRouter,
+	dockerImage: dockerImageRouter,
+	dockerVolume: dockerVolumeRouter,
 	domain: domainRouter,
 	gitea: giteaRouter,
 	gitProvider: gitProviderRouter,
@@ -95,6 +106,7 @@ export const appRouter = createTRPCRouter({
 	stripe: stripeRouter,
 	swarm: swarmRouter,
 	user: userRouter,
+	vaultProvider: vaultProviderRouter,
 	ai: aiRouter,
 	organization: organizationRouter,
 	sso: ssoRouter,
@@ -110,6 +122,8 @@ export const appRouter = createTRPCRouter({
 	tag: tagRouter,
 	tailscale: tailscaleRouter,
 	patch: patchRouter,
+	overview: overviewRouter,
+	transfer: transferRouter,
 });
 
 // export type definition of API

@@ -72,6 +72,7 @@ export const domains = pgTable("domain", {
 	cloudflareSyncStatus: cloudflareSyncStatus("cloudflareSyncStatus"),
 	cloudflareSyncedAt: text("cloudflareSyncedAt"),
 	cloudflareSyncError: text("cloudflareSyncError"),
+	enabled: boolean("enabled").notNull().default(true),
 });
 
 export const domainsRelations = relations(domains, ({ one }) => ({
@@ -151,5 +152,6 @@ export const apiUpdateDomain = createSchema
 		middlewares: true,
 		forwardAuthEnabled: true,
 		cloudflareZoneId: true,
+		enabled: true,
 	})
 	.merge(createSchema.pick({ domainId: true }).required());

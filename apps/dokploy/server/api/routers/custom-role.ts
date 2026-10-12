@@ -1,5 +1,10 @@
 import { db } from "@dokploy/server/db";
-import { member, organizationRole, user } from "@dokploy/server/db/schema";
+import {
+	member,
+	organization,
+	organizationRole,
+	user,
+} from "@dokploy/server/db/schema";
 import { statements } from "@dokploy/server/lib/access-control";
 import { TRPCError } from "@trpc/server";
 import { and, count, eq } from "drizzle-orm";
@@ -269,6 +274,16 @@ export const customRoleRouter = createTRPCRouter({
 					message: `Role "${input.roleName}" not found`,
 				});
 			}
+
+			await db
+				.update(organization)
+				.set({ defaultRole: null })
+				.where(
+					and(
+						eq(organization.id, ctx.session.activeOrganizationId),
+						eq(organization.defaultRole, input.roleName),
+					),
+				);
 
 			await audit(ctx, {
 				action: "delete",

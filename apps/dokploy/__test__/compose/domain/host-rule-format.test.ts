@@ -40,6 +40,7 @@ describe("Host rule format regression tests", () => {
 		cloudflareSyncStatus: null,
 		cloudflareSyncedAt: null,
 		cloudflareSyncError: null,
+		enabled: true,
 	};
 
 	describe("Host rule format validation", () => {

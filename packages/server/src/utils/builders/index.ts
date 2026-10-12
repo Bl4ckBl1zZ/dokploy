@@ -13,6 +13,7 @@ import {
 	prepareEnvironmentVariables,
 } from "../docker/utils";
 import { getRemoteDocker } from "../servers/remote-docker";
+import { withResolvedVaultRefs } from "../vault";
 import { getDockerCommand } from "./docker-file";
 import { getHerokuCommand } from "./heroku";
 import { getNixpacksCommand } from "./nixpacks";
@@ -39,7 +40,8 @@ export type ApplicationNested = InferResultType<
 	}
 >;
 
-export const getBuildCommand = async (application: ApplicationNested) => {
+export const getBuildCommand = async (rawApplication: ApplicationNested) => {
+	const application = await withResolvedVaultRefs(rawApplication);
 	let command = "";
 	const privateContext = await getPrivateEnvironmentContext(
 		application.environment.project.projectId,
@@ -82,8 +84,9 @@ export const getBuildCommand = async (application: ApplicationNested) => {
 };
 
 export const mechanizeDockerContainer = async (
-	application: ApplicationNested,
+	rawApplication: ApplicationNested,
 ) => {
+	const application = await withResolvedVaultRefs(rawApplication);
 	const {
 		appName,
 		env,

@@ -1,5 +1,9 @@
 import { db } from "@dokploy/server/db";
-import { member, organizationRole } from "@dokploy/server/db/schema";
+import {
+	member,
+	organization,
+	organizationRole,
+} from "@dokploy/server/db/schema";
 import { TRPCError } from "@trpc/server";
 import { and, eq } from "drizzle-orm";
 import {
@@ -421,4 +425,32 @@ export const findMemberByUserId = async (
 		});
 	}
 	return result;
+};
+
+export const resolveOrganizationDefaultRole = async (
+	organizationId: string,
+) => {
+	const org = await db.query.organization.findFirst({
+		where: eq(organization.id, organizationId),
+		columns: { defaultRole: true },
+	});
+	const defaultRole = org?.defaultRole;
+
+	if (!defaultRole || defaultRole === "owner") {
+		return "member";
+	}
+
+	if (defaultRole === "admin" || defaultRole === "member") {
+		return defaultRole;
+	}
+
+	const customRole = await db.query.organizationRole.findFirst({
+		where: and(
+			eq(organizationRole.organizationId, organizationId),
+			eq(organizationRole.role, defaultRole),
+		),
+		columns: { id: true },
+	});
+
+	return customRole ? defaultRole : "member";
 };

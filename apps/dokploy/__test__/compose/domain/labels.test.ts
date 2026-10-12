@@ -29,6 +29,7 @@ describe("createDomainLabels", () => {
 		cloudflareSyncStatus: null,
 		cloudflareSyncedAt: null,
 		cloudflareSyncError: null,
+		enabled: true,
 	};
 
 	it("should create basic labels for web entrypoint", async () => {

@@ -1197,7 +1197,7 @@ export const checkSubdomainAvailability = async (
 // Re-export for tests.
 export {
 	findTunnelHostForDomain as _findTunnelHostForDomain,
+	ingressTargetForHost as _ingressTargetForHost,
 	tunnelHostId as _tunnelHostId,
 	tunnelHostName as _tunnelHostName,
-	ingressTargetForHost as _ingressTargetForHost,
 };
