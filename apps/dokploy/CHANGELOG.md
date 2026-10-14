@@ -1,3 +1,22 @@
+# [0.43.0](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.42.0...v0.43.0) (2026-10-14)
+
+
+### Bug Fixes
+
+* **backups:** preserve service selection when changing database type ([b4681b3](https://github.com/Bl4ckBl1zZ/dokploy/commit/b4681b318f5f075974a2b5c3f384289dbb401f5f))
+* **dns:** enforce the configured OVH zone on record operations ([2674eb2](https://github.com/Bl4ckBl1zZ/dokploy/commit/2674eb200dec358914ba10e7dc0ee0f41d8f954c))
+* **enterprise:** address review feedback for dual-mode branding ([d277913](https://github.com/Bl4ckBl1zZ/dokploy/commit/d2779136c5d3f3ad02f7a1e11dfa7f126a703611))
+* **enterprise:** preserve light-mode URLs when toggling dual branding off ([0898642](https://github.com/Bl4ckBl1zZ/dokploy/commit/0898642e3209dafde1274d1294ec91a882e7ba2a))
+* **gitlab:** share one token refresh between concurrent callers ([412516d](https://github.com/Bl4ckBl1zZ/dokploy/commit/412516d47b07c50bdd98cfeb58b1c10d97b919eb))
+* **ui:** wrap and clamp service card description on environment page ([726664a](https://github.com/Bl4ckBl1zZ/dokploy/commit/726664ab3c250ce5b9678f729e4a6852182c13fb))
+
+
+### Features
+
+* **dns:** add optional zone to OVH provider ([e8f236c](https://github.com/Bl4ckBl1zZ/dokploy/commit/e8f236c9dbce7fb30581e2661ed33e61f1b34104))
+* **enterprise:** dual-mode branding with separate light/dark theme logos ([0b537a8](https://github.com/Bl4ckBl1zZ/dokploy/commit/0b537a815dfe8c571416b9212b102edeb03614ef))
+* **ui:** make projects card clickable on home dashboard ([3cc8158](https://github.com/Bl4ckBl1zZ/dokploy/commit/3cc8158fdc3917252a52234192f713a0e9d6d266))
+
 # [0.42.0](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.41.1...v0.42.0) (2026-10-12)
 
 
