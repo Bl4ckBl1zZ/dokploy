@@ -15250,6 +15250,10 @@
                           "consumerKey": {
                             "type": "string",
                             "minLength": 1
+                          },
+                          "zone": {
+                            "type": "string",
+                            "minLength": 1
                           }
                         },
                         "required": [
@@ -15465,6 +15469,10 @@
                             "minLength": 1
                           },
                           "consumerKey": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "zone": {
                             "type": "string",
                             "minLength": 1
                           }
@@ -15929,6 +15937,10 @@
                             "minLength": 1
                           },
                           "consumerKey": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "zone": {
                             "type": "string",
                             "minLength": 1
                           }
@@ -62679,6 +62691,39 @@
                             "type": "null"
                           }
                         ]
+                      },
+                      "logoLightUrl": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "loginLogoLightUrl": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "faviconLightUrl": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "dualModeBranding": {
+                        "type": "boolean"
                       }
                     },
                     "required": [
@@ -62693,7 +62738,11 @@
                       "errorPageTitle",
                       "errorPageDescription",
                       "footerText",
-                      "ogImageUrl"
+                      "ogImageUrl",
+                      "logoLightUrl",
+                      "loginLogoLightUrl",
+                      "faviconLightUrl",
+                      "dualModeBranding"
                     ]
                   }
                 },

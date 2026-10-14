@@ -306,6 +306,11 @@ export default function Home({ IS_CLOUD, enforceSSO }: Props) {
 								whitelabeling?.logoUrl ||
 								undefined
 							}
+							logoLightUrl={
+								whitelabeling?.loginLogoLightUrl ||
+								whitelabeling?.logoLightUrl ||
+								undefined
+							}
 						/>
 						Sign in
 					</div>
