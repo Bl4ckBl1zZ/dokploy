@@ -13,6 +13,7 @@ interface WhitelabelingDocumentProps {
 	appDescription: string | null;
 	ogImageUrl: string | null;
 	faviconHref: string | null;
+	faviconLightHref: string | null;
 	customCss: string | null;
 	baseUrl: string;
 }
@@ -33,6 +34,7 @@ export default function Document({
 	appDescription,
 	ogImageUrl,
 	faviconHref,
+	faviconLightHref,
 	customCss,
 	baseUrl,
 }: WhitelabelingDocumentProps) {
@@ -55,7 +57,22 @@ export default function Document({
 				<meta property="og:title" content={title} />
 				<meta property="og:description" content={description} />
 				<meta property="og:image" content={ogImage} />
-				<link rel="icon" href={faviconHref || "/icon.svg"} />
+				{faviconLightHref ? (
+					<>
+						<link
+							rel="icon"
+							href={faviconHref || "/icon.svg"}
+							media="(prefers-color-scheme: dark)"
+						/>
+						<link
+							rel="icon"
+							href={faviconLightHref}
+							media="(prefers-color-scheme: light)"
+						/>
+					</>
+				) : (
+					<link rel="icon" href={faviconHref || "/icon.svg"} />
+				)}
 				{customCss && (
 					<style
 						id="whitelabeling-styles"
@@ -80,6 +97,7 @@ declare global {
 			appDescription: string | null;
 			ogImageUrl: string | null;
 			faviconHref: string | null;
+			faviconLightHref: string | null;
 			customCss: string | null;
 		};
 		expiresAt: number;
@@ -95,6 +113,7 @@ Document.getInitialProps = async (
 	let appDescription: string | null = null;
 	let ogImageUrl: string | null = null;
 	let faviconHref: string | null = null;
+	let faviconLightHref: string | null = null;
 	let customCss: string | null = null;
 
 	const host = ctx.req?.headers?.host || "localhost:3000";
@@ -121,6 +140,7 @@ Document.getInitialProps = async (
 			ogImageUrl = config.ogImageUrl;
 			customCss = config.customCss ? sanitizeCustomCss(config.customCss) : null;
 			faviconHref = config.faviconUrl || null;
+			faviconLightHref = config.faviconLightUrl || null;
 		}
 	} catch {
 		// Fall back to defaults if settings can't be read (e.g. DB not ready)
@@ -132,6 +152,7 @@ Document.getInitialProps = async (
 			appDescription,
 			ogImageUrl,
 			faviconHref,
+			faviconLightHref,
 			customCss,
 		},
 		expiresAt: Date.now() + SETTINGS_CACHE_TTL,
@@ -143,6 +164,7 @@ Document.getInitialProps = async (
 		appDescription,
 		ogImageUrl,
 		faviconHref,
+		faviconLightHref,
 		customCss,
 		baseUrl,
 	};
