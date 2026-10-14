@@ -40,7 +40,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Domains & SSL**: Multi-domain per service, Let's Encrypt, custom certs, redirects.
 - **Environment Variables**: Per-service and inherited from project/environment, secure storage, editor autocomplete.
 - **Secrets (Vault Providers)**: Org-level external secret stores (HashiCorp Vault, Infisical, AWS Secrets Manager, AWS Parameter Store, Doppler, Azure Key Vault, Scaleway, Phase) referenced from env vars via `${{vault.…}}`. Settings → Secrets; permission `vaultProvider`.
-- **DNS Providers**: Org-level DNS provider credentials (Cloudflare, Route 53, Porkbun, Infomaniak, OVH) for DNS record management on domains. Settings → DNS Providers; permission `dnsProvider`. Separate from the fork's Cloudflare Tunnel integration.
+- **DNS Providers**: Org-level DNS provider credentials (Cloudflare, Route 53, Porkbun, Infomaniak, OVH with optional zone restriction) for DNS record management on domains. Settings → DNS Providers; permission `dnsProvider`. Separate from the fork's Cloudflare Tunnel integration.
 - **Volumes & Mounts**: Persistent + bind mounts.
 - **CLI/API**: tRPC + OpenAPI (`@dokploy/trpc-openapi`) for programmatic management; Swagger UI at `/swagger`.
 - **AI Configuration**: Multi-provider LLM integration (Anthropic, OpenAI, Azure, Cohere, Mistral, DeepInfra, Ollama) for assistance features.
@@ -48,7 +48,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Sessions & Passkeys**: Active session management (Settings → Sessions) and WebAuthn passkey sign-in (`@better-auth/passkey`).
 - **Audit Logs**: Compliance trail.
 - **SSO**: SAML/OIDC.
-- **Whitelabeling**: Custom branding.
+- **Whitelabeling**: Custom branding, with optional dual-mode branding (separate light-theme logo, login logo and favicon).
 - **Billing**: Stripe subscription management (cloud only).
 
 ## TypeScript Rules
