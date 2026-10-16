@@ -43,7 +43,8 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **DNS Providers**: Org-level DNS provider credentials (Cloudflare, Route 53, Porkbun, Infomaniak, OVH with optional zone restriction) for DNS record management on domains. Settings → DNS Providers; permission `dnsProvider`. Separate from the fork's Cloudflare Tunnel integration.
 - **Volumes & Mounts**: Persistent + bind mounts.
 - **CLI/API**: tRPC + OpenAPI (`@dokploy/trpc-openapi`) for programmatic management; Swagger UI at `/swagger`.
-- **AI Configuration**: Multi-provider LLM integration (Anthropic, OpenAI, Azure, Cohere, Mistral, DeepInfra, Ollama) for assistance features.
+- **AI Configuration**: Multi-provider LLM integration (Anthropic, OpenAI, Azure, Cohere, Mistral, DeepInfra, Ollama) for assistance features. Gated by the `ai` permission resource (owner/admin by default; members need a custom role).
+- **Logs & Metrics**: Org-level telemetry providers (Loki, Datadog, Better Stack, Elasticsearch, Splunk HEC, AWS CloudWatch, Prometheus remote-write, New Relic, InfluxDB) that receive container logs and metrics via per-server `dokploy-vector` (Vector) and `dokploy-cadvisor` Swarm services. Settings → Logs & Metrics; permission `telemetryProvider` (self-hosted, requires a Swarm manager).
 - **Users / Teams / Orgs**: Multi-tenant orgs, RBAC (owner/admin/member + custom roles, per-org default role, `server.terminal` permission), invitations, onboarding wizard for new users, self-service account deletion.
 - **Sessions & Passkeys**: Active session management (Settings → Sessions) and WebAuthn passkey sign-in (`@better-auth/passkey`).
 - **Audit Logs**: Compliance trail.
@@ -82,24 +83,24 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 
 ## Tech Stack
 
-- **Framework (frontend)**: Next.js 16.3.4 (Pages Router), React 18.2.0
+- **Framework (frontend)**: Next.js 16.3.8 (Pages Router), React 18.2.0
 - **Frameworks (microservices)**: Hono 4.11 (`apps/api`, `apps/schedules`)
 - **Language**: TypeScript 7 (Node 24.4.0+)
 - **Styling**: Tailwind CSS 3.4.17 with `tailwindcss-animate`, `@tailwindcss/typography`, `tailwind-merge`, `class-variance-authority`, `clsx`. Theme via CSS variables (HSL); base color `zinc`. Dark mode via `next-themes` 0.2.1.
 - **UI Components**: shadcn/ui (Radix UI primitives) — ~44 components in `apps/dokploy/components/ui/`. Icon library: `lucide-react` 0.469.0. Code editor: `@uiw/react-codemirror`. Terminal: `xterm` + `@xterm/addon-attach`. Toasts: `sonner` 1.7.4.
 - **Backend**: tRPC 11 server in `apps/dokploy/server/`, business logic in `packages/server/`. Standalone Hono services for API gateway and BullMQ job scheduler.
-- **Database**: PostgreSQL via `postgres` driver 3.4.4. **ORM**: Drizzle 0.45.1 + drizzle-kit 0.31.4. Schema lives in `packages/server/src/db/schema/`. Migrations: schema-first, runtime via `apps/dokploy/migration.ts`.
+- **Database**: PostgreSQL via `postgres` driver 3.4.4. **ORM**: Drizzle 0.45.2 + drizzle-kit 0.31.4. Schema lives in `packages/server/src/db/schema/`. Migrations: schema-first, runtime via `apps/dokploy/migration.ts`.
 - **Auth**: `better-auth` 1.6.23 with `@better-auth/sso`, `@better-auth/api-key`, `@better-auth/passkey`, organization plugin, 2FA. Password hashing: `bcrypt`. Crypto: `@oslojs/crypto`.
 - **API**: tRPC 11.10 (`@trpc/server`, `@trpc/client`, `@trpc/next`, `@trpc/react-query`) + `@dokploy/trpc-openapi` 0.0.18 for OpenAPI generation. SuperJSON serialization. Validation via `zod` 4.3.6 + `drizzle-zod` 0.8.3.
 - **Forms**: `react-hook-form` 7.71 + `@hookform/resolvers` (zod / standard-schema resolver).
 - **State / Data**: `@tanstack/react-query` 5.90 (via tRPC), `@tanstack/react-table` 8.21.
 - **Jobs / Queue**: BullMQ 5.67 backed by Redis (`ioredis` / `redis`). Standalone scheduler in `apps/schedules/`.
-- **Infrastructure SDKs**: `dockerode` 4.0.2 (Docker), `ssh2` 1.15 (remote shells), `node-pty` 1.0 (xterm bridge), `ws` 8.16 (WebSocket).
+- **Infrastructure SDKs**: `dockerode` 4.0.2 (Docker), `ssh2` 1.15 (remote shells), `node-pty` 1.0 (xterm bridge), `ws` 8.21 (WebSocket).
 - **Git providers**: `octokit` 3.1, `@octokit/auth-app`, `@octokit/webhooks`.
-- **Email**: `resend` 6.0.2 + `@react-email/components` 0.0.21, `nodemailer` 6.9 (SMTP fallback).
+- **Email**: `resend` 6.0.2 + `@react-email/components` 0.0.21, `nodemailer` 10 (SMTP fallback).
 - **Payments**: `stripe` 17.2 + `@stripe/stripe-js` 4.8 (cloud only).
 - **AI SDKs**: Vercel `ai` 6.0 + `@ai-sdk/anthropic`, `@ai-sdk/openai`, `@ai-sdk/azure`, `@ai-sdk/cohere`, `@ai-sdk/mistral`, `@ai-sdk/deepinfra`, `@ai-sdk/openai-compatible`, `ai-sdk-ollama`.
-- **Bundling**: `esbuild` 0.20.2 (server bundles via `esbuild.config.ts`), `tsx` 4.16 (TS execution), `tsc-alias` (path alias resolution at build time).
+- **Bundling**: `esbuild` 0.25 (server bundles via `esbuild.config.ts`), `tsx` 4.16 (TS execution), `tsc-alias` (path alias resolution at build time).
 - **Linter / Formatter**: Biome 2.5.7.
 - **Testing**: Vitest 4.1 (test fixtures in `apps/dokploy/__test__/`).
 - **Logging**: `pino` 9.4 + `pino-pretty`.
@@ -198,7 +199,7 @@ istanbul-v3/
 - **Sidebar** (`apps/dokploy/components/layouts/side.tsx` + `components/ui/sidebar.tsx`): `SidebarProvider` context wraps the dashboard. Collapsible on desktop (toggle: ⌘B), Sheet overlay on mobile. State persisted in `sidebar:state` cookie (7-day TTL). Structure: Header → Content (groups w/ `SidebarMenu` + `SidebarMenuSub`) → Footer.
 - **Sections (sidebar)**:
   - **Home**: Home, Projects, Overview, Monitoring*, Schedules*, Traefik FS*, Docker*, Requests* (* = self-hosted only).
-  - **Settings**: Web Server*, Profile, Sessions, Remote Servers, Deployments, Users, Audit Logs, SSH Keys, AI, Tags, Git, Cloudflare, Tailscale, Registry, Secrets, DNS Providers, S3 Destinations, Certificates, Notifications, Billing (cloud), SSO (admin), Whitelabeling (owner).
+  - **Settings**: Web Server*, Profile, Sessions, Remote Servers, Deployments, Users, Audit Logs, SSH Keys, AI, Tags, Git, Cloudflare, Tailscale, Registry, Logs & Metrics, Secrets, DNS Providers, S3 Destinations, Certificates, Notifications, Billing (cloud), SSO (admin), Whitelabeling (owner).
   - **Help**: Documentation, Support Discord (external links).
 - **Top of page**: Breadcrumb trail (`components/shared/breadcrumb-sidebar.tsx`, `advance-breadcrumb.tsx`) + `UserNav` with theme toggle.
 
@@ -224,7 +225,7 @@ istanbul-v3/
 - **Background jobs**: BullMQ workers run inside `apps/dokploy` (queues in `apps/dokploy/server/queues/`). The dedicated **`apps/schedules`** Hono service (port 4001, secured with `X-API-Key`) manages cron / repeatable jobs (backups, server cleanup, custom schedules, timezone-aware).
 - **Multi-server**: Servers stored with IP, port, username, SSH key. `execAsyncRemote()` runs commands; setup scripts auto-install Docker on registration. Docker Swarm support: cluster routers, node placement (manager/worker), per-server Traefik containers.
 - **Monitoring**: `apps/monitoring` is a separate service collecting CPU/memory/disk/network metrics. Threshold-based notifications. Access-log parsing for Traefik. Self-hosted only.
-- **Realtime**: WebSocket via `ws` 8.16 — `apps/dokploy/server/wss/` and `packages/server/src/wss/` handle deployment log streaming, container exec terminals (`xterm` ↔ `node-pty`), and tRPC subscriptions.
+- **Realtime**: WebSocket via `ws` 8.21 — `apps/dokploy/server/wss/` and `packages/server/src/wss/` handle deployment log streaming, container exec terminals (`xterm` ↔ `node-pty`), and tRPC subscriptions.
 - **File / log storage**: Deployment logs in DB; backups on configured destinations (S3 / object storage / local volumes); Traefik configs written to host volumes via SSH.
 
 ### Environment Variables
