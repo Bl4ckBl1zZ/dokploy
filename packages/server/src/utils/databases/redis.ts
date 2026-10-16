@@ -2,6 +2,7 @@ import { getPrivateEnvironmentContext } from "@dokploy/server/services/tailscale
 import type { InferResultType } from "@dokploy/server/types/with";
 import type { CreateServiceOptions } from "dockerode";
 import { resolveServiceNetworks } from "../../services/network";
+import { buildDokployLabels } from "../docker/dokploy-labels";
 import {
 	calculateResources,
 	generateBindMounts,
@@ -98,7 +99,18 @@ export const buildRedis = async (rawRedis: RedisNested) => {
 							Args: ["-c", `redis-server --requirepass ${databasePassword}`],
 						}),
 				...(Ulimits && { Ulimits }),
-				Labels,
+				Labels: {
+					...Labels,
+					...buildDokployLabels({
+						organizationId: redis.environment.project.organizationId,
+						projectId: redis.environment.projectId,
+						projectName: redis.environment.project.name,
+						environmentId: redis.environmentId,
+						environmentName: redis.environment.name,
+						applicationId: redis.redisId,
+						applicationName: redis.name,
+					}),
+				},
 			},
 			Networks: resolvedNetworks,
 			RestartPolicy,
