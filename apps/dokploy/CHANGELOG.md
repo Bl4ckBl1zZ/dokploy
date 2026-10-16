@@ -1,3 +1,36 @@
+# [0.44.0](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.43.0...v0.44.0) (2026-10-16)
+
+
+### Bug Fixes
+
+* **ai:** fix PermissionCtx type on resolveInputApiKey ([0049421](https://github.com/Bl4ckBl1zZ/dokploy/commit/00494210954756fa7bd842f630fcae89d945614f))
+* **ai:** mask apiKey exposure, add audit logging, resolve masked-key UX regression ([2bfcac5](https://github.com/Bl4ckBl1zZ/dokploy/commit/2bfcac58b00281b897615b1a6c9cea54dbe7d7f0))
+* **ai:** require update permission for stored key resolution, deduplicate resolve logic ([3d67665](https://github.com/Bl4ckBl1zZ/dokploy/commit/3d67665c33c9d967f825e6d4c9603e3b0f1d6e3f))
+* **deps:** bump next, shell-quote and proxy-addr for critical advisories ([7289a3f](https://github.com/Bl4ckBl1zZ/dokploy/commit/7289a3f68e6dfa6fc846d8da63c6a587838eaeb3))
+* **deps:** bump nodemailer and patch transitive high advisories ([9992659](https://github.com/Bl4ckBl1zZ/dokploy/commit/9992659f2429d0cf2a0ed26a52420ef18eff45a2))
+* **deps:** resolve open Dependabot alerts ([5e0b021](https://github.com/Bl4ckBl1zZ/dokploy/commit/5e0b021ec2727f266c2530b8fd57bbb1ddcd16a5))
+* **permissions:** mask apiKey on ai.one, add audit logging, remove dead endpoint ([a7d8378](https://github.com/Bl4ckBl1zZ/dokploy/commit/a7d8378f52002432f2e6261a72801d584d54c42a))
+* **permissions:** resolve AI module authorization edge cases and test failures ([cd9edb2](https://github.com/Bl4ckBl1zZ/dokploy/commit/cd9edb290bfd782f8ee56d493b38fbc994e0bdc7))
+* redact apiKey from getAll AI endpoint to prevent credential exposure ([bdefc02](https://github.com/Bl4ckBl1zZ/dokploy/commit/bdefc02e77a8319da6d5e44ac9974bdcaa57c293))
+* resolve cross-tenant access and granular role UI issues for AI settings ([293e197](https://github.com/Bl4ckBl1zZ/dokploy/commit/293e19703a0eac50cd2a3deacd45c705bf67a694))
+* **server:** let members list servers in server pickers ([749bb2c](https://github.com/Bl4ckBl1zZ/dokploy/commit/749bb2c1ce9a17eb51dead21fb2950e5fcc61439))
+* **settings:** check server organization in traefik file endpoints ([136a09d](https://github.com/Bl4ckBl1zZ/dokploy/commit/136a09d0161e46fbab14a1872c7c7149a580ed89))
+* **settings:** confine Traefik file read/write to the Traefik config directory ([1f1acac](https://github.com/Bl4ckBl1zZ/dokploy/commit/1f1acacf585238f9a8f86f8b2a9ad1cb23834deb))
+* suppress EPIPE errors in pipeBetweenServers when target exits early ([37df4e4](https://github.com/Bl4ckBl1zZ/dokploy/commit/37df4e484e3002e16df6afd0f274edb10bbefaa9))
+* **templates:** cap visible tags so the Create button stays visible ([94f3815](https://github.com/Bl4ckBl1zZ/dokploy/commit/94f3815eb46695485cea03a02895394de82451f5)), closes [#5660](https://github.com/Bl4ckBl1zZ/dokploy/issues/5660)
+* **transfer:** keep source stream flowing after target closes its stdin ([5a8f5ce](https://github.com/Bl4ckBl1zZ/dokploy/commit/5a8f5ce0f294b6a4602cce43b4facd1db0ea052c))
+
+
+### Features
+
+* **logs-and-metrics:** ship container logs and metrics to external providers via Vector ([b329595](https://github.com/Bl4ckBl1zZ/dokploy/commit/b3295953703e8bc422951120245096fd3b4b2ac0))
+* **permissions:** add AI module to enterprise custom roles ([b5473e6](https://github.com/Bl4ckBl1zZ/dokploy/commit/b5473e63fdac3d9756a16786f902d643e53197a8))
+
+
+### Performance Improvements
+
+* **ai:** optimize permission evaluation and remove redundant DB queries ([5ff8d05](https://github.com/Bl4ckBl1zZ/dokploy/commit/5ff8d05ff7f1e7711e0f66f06b8799ed7c637771))
+
 # [0.43.0](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.42.0...v0.43.0) (2026-10-14)
 
 
