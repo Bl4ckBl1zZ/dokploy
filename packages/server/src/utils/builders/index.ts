@@ -4,6 +4,7 @@ import { getPrivateEnvironmentContext } from "@dokploy/server/services/tailscale
 import type { InferResultType } from "@dokploy/server/types/with";
 import type { CreateServiceOptions } from "dockerode";
 import { getRegistryTag, uploadImageRemoteCommand } from "../cluster/upload";
+import { buildDokployLabels } from "../docker/dokploy-labels";
 import {
 	calculateResources,
 	generateBindMounts,
@@ -159,7 +160,18 @@ export const mechanizeDockerContainer = async (
 						Args: args,
 					}),
 				...(Ulimits && { Ulimits }),
-				Labels,
+				Labels: {
+					...Labels,
+					...buildDokployLabels({
+						organizationId: application.environment.project.organizationId,
+						projectId: application.environment.projectId,
+						projectName: application.environment.project.name,
+						environmentId: application.environmentId,
+						environmentName: application.environment.name,
+						applicationId: application.applicationId,
+						applicationName: application.name,
+					}),
+				},
 			},
 			Networks: resolvedNetworks,
 			RestartPolicy,
