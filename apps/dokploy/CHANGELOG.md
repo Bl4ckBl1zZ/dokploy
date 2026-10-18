@@ -1,3 +1,10 @@
+## [0.44.2](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.44.1...v0.44.2) (2026-10-18)
+
+
+### Bug Fixes
+
+* **cloudflare:** load only serverId when resolving a domain's tunnel host ([#44](https://github.com/Bl4ckBl1zZ/dokploy/issues/44)) ([0418ac1](https://github.com/Bl4ckBl1zZ/dokploy/commit/0418ac1bc6c427244458f8c6e4777eeec85df26f))
+
 ## [0.44.1](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.44.0...v0.44.1) (2026-10-18)
 
 
