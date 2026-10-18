@@ -507,7 +507,13 @@ const findTunnelHostForDomain = async (
 ): Promise<TunnelHost> => {
 	const row = await db.query.domains.findFirst({
 		where: eq(domains.domainId, domainId),
-		with: { application: true, compose: true },
+		// Only serverId is needed. Loading whole rows makes drizzle build one json_build_array() per relation with
+		// one argument per column; `application` has 102 columns and Postgres allows at most 100 function
+		// arguments, so every sync of a new domain failed with "Failed query: select ...".
+		with: {
+			application: { columns: { serverId: true } },
+			compose: { columns: { serverId: true } },
+		},
 	});
 	if (!row) throw new Error("Domain not found");
 	const serverId = row.application?.serverId ?? row.compose?.serverId ?? null;
