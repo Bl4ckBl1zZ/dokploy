@@ -1,3 +1,16 @@
+## [0.44.1](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.44.0...v0.44.1) (2026-10-18)
+
+
+### Bug Fixes
+
+* **billing:** guard loadStripe behind key check for self-hosted instances ([8377300](https://github.com/Bl4ckBl1zZ/dokploy/commit/837730038caeabc98c02a4356a17fd741e6c0acf))
+* decode Route53 octal escapes in record names ([#5553](https://github.com/Bl4ckBl1zZ/dokploy/issues/5553)) ([e0c8d80](https://github.com/Bl4ckBl1zZ/dokploy/commit/e0c8d80cdea15a4ac3fe495a6ad38e043b4b80b5))
+* escape HTML and truncate long messages in Telegram notifications ([7430afd](https://github.com/Bl4ckBl1zZ/dokploy/commit/7430afd701f3db36e4a90b808fe5c81f709a4ae0))
+* escape metadata fields and fix entity boundary off-by-one ([41cecde](https://github.com/Bl4ckBl1zZ/dokploy/commit/41cecde7353d837240af659e0419f45f9f4e0199))
+* **ui:** fix server badge and appName overflow on mobile ([829f8af](https://github.com/Bl4ckBl1zZ/dokploy/commit/829f8af63fa34141df5e43db2b0b6a5feb156887))
+* **ui:** prevent mobile service header overflow ([949ac8e](https://github.com/Bl4ckBl1zZ/dokploy/commit/949ac8e0a226301416da846462e3f9c9706ff63b))
+* **ui:** prevent service header overflow on mobile ([5ccc15f](https://github.com/Bl4ckBl1zZ/dokploy/commit/5ccc15f00d3d6263fd9cbf22ba4c63f76f60fa44))
+
 # [0.44.0](https://github.com/Bl4ckBl1zZ/dokploy/compare/v0.43.0...v0.44.0) (2026-10-16)
 
 
