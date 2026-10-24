@@ -1296,6 +1296,13 @@
       "when": 1792154504976,
       "tag": "0184_sloppy_solo",
       "breakpoints": true
+    },
+    {
+      "idx": 185,
+      "version": "7",
+      "when": 1792845512005,
+      "tag": "0185_gifted_korath",
+      "breakpoints": true
     }
   ]
 }
