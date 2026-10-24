@@ -26,12 +26,12 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Overview**: Cross-project dashboard of all services the user can access (`/dashboard/overview`).
 - **Service Transfer**: Move applications, databases, and compose services between servers.
 - **Service Icons**: Custom icons for services and compose templates.
-- **Backups & Restore**: Scheduled backups for all DB types to S3-compatible destinations with retention policies.
+- **Backups & Restore**: Scheduled backups for all DB types to S3-compatible destinations with retention policies, custom backup file names, and browsing/downloading backup files from the UI.
 - **Volume Backups**: Snapshot/restore of Docker volumes.
 - **Multi-Server / Multi-Node**: SSH-managed remote servers and Docker Swarm clusters.
 - **Templates**: One-click deploys of OSS apps (Plausible, Pocketbase, Cal.com, etc.).
-- **Traefik Integration**: Auto-generated dynamic routing, SSL via Let's Encrypt, custom certs.
-- **Real-time Monitoring**: CPU/memory/storage/network metrics with threshold alerts (self-hosted).
+- **Traefik Integration**: Auto-generated dynamic routing, SSL via Let's Encrypt, custom certs; in-place Traefik version updates from Web Server / server actions when the running version is older than the recommended one.
+- **Real-time Monitoring**: CPU/memory/storage/network metrics with threshold alerts (self-hosted). Members with access to a service can view its container monitoring.
 - **Docker Management**: Container inspection, exec terminals (xterm.js), logs streaming.
 - **Schedules / Cron**: Scheduled deployments, redeploys, custom commands (self-hosted).
 - **Notifications**: Slack, Discord, Telegram, Email (Resend/SMTP), Teams, Mattermost, Gotify, Lark, Pushover, Ntfy, custom webhooks.
@@ -49,7 +49,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Sessions & Passkeys**: Active session management (Settings → Sessions) and WebAuthn passkey sign-in (`@better-auth/passkey`).
 - **Audit Logs**: Compliance trail.
 - **SSO**: SAML/OIDC.
-- **Whitelabeling**: Custom branding, with optional dual-mode branding (separate light-theme logo, login logo and favicon).
+- **Whitelabeling**: Custom branding, with optional dual-mode branding (separate light-theme logo, login logo and favicon) and a custom forgot-password flow (`supportEmail` / `passwordResetGuide`, self-hosted).
 - **Billing**: Stripe subscription management (cloud only).
 
 ## TypeScript Rules
@@ -85,7 +85,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 
 - **Framework (frontend)**: Next.js 16.3.8 (Pages Router), React 18.2.0
 - **Frameworks (microservices)**: Hono 4.11 (`apps/api`, `apps/schedules`)
-- **Language**: TypeScript 7 (Node 24.4.0+)
+- **Language**: TypeScript 7 (Node 24.22.1+, see `.nvmrc`)
 - **Styling**: Tailwind CSS 3.4.17 with `tailwindcss-animate`, `@tailwindcss/typography`, `tailwind-merge`, `class-variance-authority`, `clsx`. Theme via CSS variables (HSL); base color `zinc`. Dark mode via `next-themes` 0.2.1.
 - **UI Components**: shadcn/ui (Radix UI primitives) — ~44 components in `apps/dokploy/components/ui/`. Icon library: `lucide-react` 0.469.0. Code editor: `@uiw/react-codemirror`. Terminal: `xterm` + `@xterm/addon-attach`. Toasts: `sonner` 1.7.4.
 - **Backend**: tRPC 11 server in `apps/dokploy/server/`, business logic in `packages/server/`. Standalone Hono services for API gateway and BullMQ job scheduler.
