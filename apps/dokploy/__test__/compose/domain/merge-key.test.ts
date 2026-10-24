@@ -80,6 +80,11 @@ const domain: Domain = {
 	middlewares: null,
 	forwardAuthEnabled: false,
 	enabled: true,
+	cloudflareZoneId: null,
+	cloudflareRecordId: null,
+	cloudflareSyncStatus: null,
+	cloudflareSyncedAt: null,
+	cloudflareSyncError: null,
 };
 
 describe("compose services using YAML merge keys (#5625)", () => {
