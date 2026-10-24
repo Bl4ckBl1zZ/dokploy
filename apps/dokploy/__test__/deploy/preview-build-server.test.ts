@@ -5,7 +5,12 @@ vi.mock("@dokploy/server/db", () => {
 		set: vi.fn(() => chain),
 		values: vi.fn(() => chain),
 		where: vi.fn(() => chain),
-		returning: vi.fn().mockResolvedValue([{ deploymentId: "dep-1" }]),
+		// removePreviewDeployment checks returning() to confirm the row was deleted.
+		returning: vi
+			.fn()
+			.mockResolvedValue([
+				{ deploymentId: "dep-1", previewDeploymentId: "preview-1" },
+			]),
 	};
 	return {
 		db: {
