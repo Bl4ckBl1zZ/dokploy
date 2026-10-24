@@ -5124,6 +5124,18 @@
                     "type": "string",
                     "minLength": 1
                   },
+                  "customName": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 100,
+                        "pattern": "^([a-zA-Z0-9][a-zA-Z0-9._-]*)?$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
                   "destinationId": {
                     "type": "string"
                   },
@@ -5493,6 +5505,11 @@
                   },
                   "includeEncryptionKey": {
                     "type": "boolean"
+                  },
+                  "customName": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "pattern": "^([a-zA-Z0-9][a-zA-Z0-9._-]*)?$"
                   }
                 },
                 "required": [
@@ -6347,6 +6364,184 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backup.listBackupFilesByBackupId": {
+      "get": {
+        "operationId": "backup-listBackupFilesByBackupId",
+        "tags": [
+          "backup"
+        ],
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "backupId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization not provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backup.getDownloadUrl": {
+      "post": {
+        "operationId": "backup-getDownloadUrl",
+        "tags": [
+          "backup"
+        ],
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "backupId": {
+                    "type": "string"
+                  },
+                  "fileName": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "backupId",
+                  "fileName"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization not provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.FORBIDDEN"
                 }
               }
             }
@@ -7964,9 +8159,6 @@
                   "privateKey": {
                     "type": "string",
                     "minLength": 1
-                  },
-                  "certificatePath": {
-                    "type": "string"
                   },
                   "autoRenew": {
                     "anyOf": [
@@ -10645,7 +10837,16 @@
                   "branch": {
                     "anyOf": [
                       {
-                        "type": "string"
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "^(?!-)(?!\\/)(?!.*\\/\\/)(?!.*\\.\\.)(?!.*@\\{)(?!.*(?:^|\\/)\\.)(?!.*(?:^|\\/)[^/]*\\.lock(?:\\/|$))(?!.*(?:^|\\/)[^/]*\\.(?:\\/|$))(?!.*[/.]$)[A-Za-z0-9._/-]+$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       },
                       {
                         "type": "null"
@@ -10695,7 +10896,16 @@
                   "gitlabBranch": {
                     "anyOf": [
                       {
-                        "type": "string"
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "^(?!-)(?!\\/)(?!.*\\/\\/)(?!.*\\.\\.)(?!.*@\\{)(?!.*(?:^|\\/)\\.)(?!.*(?:^|\\/)[^/]*\\.lock(?:\\/|$))(?!.*(?:^|\\/)[^/]*\\.(?:\\/|$))(?!.*[/.]$)[A-Za-z0-9._/-]+$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       },
                       {
                         "type": "null"
@@ -10745,7 +10955,16 @@
                   "bitbucketBranch": {
                     "anyOf": [
                       {
-                        "type": "string"
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "^(?!-)(?!\\/)(?!.*\\/\\/)(?!.*\\.\\.)(?!.*@\\{)(?!.*(?:^|\\/)\\.)(?!.*(?:^|\\/)[^/]*\\.lock(?:\\/|$))(?!.*(?:^|\\/)[^/]*\\.(?:\\/|$))(?!.*[/.]$)[A-Za-z0-9._/-]+$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       },
                       {
                         "type": "null"
@@ -10775,7 +10994,16 @@
                   "giteaBranch": {
                     "anyOf": [
                       {
-                        "type": "string"
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "^(?!-)(?!\\/)(?!.*\\/\\/)(?!.*\\.\\.)(?!.*@\\{)(?!.*(?:^|\\/)\\.)(?!.*(?:^|\\/)[^/]*\\.lock(?:\\/|$))(?!.*(?:^|\\/)[^/]*\\.(?:\\/|$))(?!.*[/.]$)[A-Za-z0-9._/-]+$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       },
                       {
                         "type": "null"
@@ -10795,7 +11023,16 @@
                   "customGitBranch": {
                     "anyOf": [
                       {
-                        "type": "string"
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "^(?!-)(?!\\/)(?!.*\\/\\/)(?!.*\\.\\.)(?!.*@\\{)(?!.*(?:^|\\/)\\.)(?!.*(?:^|\\/)[^/]*\\.lock(?:\\/|$))(?!.*(?:^|\\/)[^/]*\\.(?:\\/|$))(?!.*[/.]$)[A-Za-z0-9._/-]+$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       },
                       {
                         "type": "null"
@@ -52571,6 +52808,175 @@
         }
       }
     },
+    "/settings.getTraefikOverview": {
+      "get": {
+        "operationId": "settings-getTraefikOverview",
+        "tags": [
+          "settings"
+        ],
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "serverId",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization not provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/settings.updateTraefik": {
+      "post": {
+        "operationId": "settings-updateTraefik",
+        "tags": [
+          "settings"
+        ],
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "serverId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization not provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/settings.updateLogCleanup": {
       "post": {
         "operationId": "settings-updateLogCleanup",
@@ -63888,6 +64294,28 @@
                           }
                         ]
                       },
+                      "passwordResetGuide": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "supportEmail": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "email",
+                            "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
                       "logoLightUrl": {
                         "anyOf": [
                           {
@@ -63935,6 +64363,8 @@
                       "errorPageDescription",
                       "footerText",
                       "ogImageUrl",
+                      "passwordResetGuide",
+                      "supportEmail",
                       "logoLightUrl",
                       "loginLogoLightUrl",
                       "faviconLightUrl",
@@ -64730,7 +65160,8 @@
                 "cancel",
                 "redeploy",
                 "login",
-                "logout"
+                "logout",
+                "download"
               ]
             }
           },
