@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockGetDockerResourceType = vi.hoisted(() => vi.fn());
 const mockSpawnAsync = vi.hoisted(() => vi.fn());
 const mockGetUpdateData = vi.hoisted(() => vi.fn());
+const mockReloadDockerResource = vi.hoisted(() => vi.fn());
 
 const noop = vi.fn();
 
@@ -45,7 +46,7 @@ vi.mock("@dokploy/server", () => ({
 	readMonitoringConfig: noop,
 	readPorts: noop,
 	recreateDirectory: noop,
-	reloadDockerResource: noop,
+	reloadDockerResource: mockReloadDockerResource,
 	sendDockerCleanupNotifications: noop,
 	setupGPUSupport: noop,
 	spawnAsync: mockSpawnAsync,
@@ -102,7 +103,7 @@ describe("settings.updateServer", () => {
 			message: expect.stringContaining("not running as a Docker service"),
 		});
 
-		expect(mockSpawnAsync).not.toHaveBeenCalled();
+		expect(mockReloadDockerResource).not.toHaveBeenCalled();
 	});
 
 	it("fails for a standalone container where docker service update cannot run", async () => {
@@ -117,7 +118,7 @@ describe("settings.updateServer", () => {
 			message: expect.stringContaining("not running as a Docker service"),
 		});
 
-		expect(mockSpawnAsync).not.toHaveBeenCalled();
+		expect(mockReloadDockerResource).not.toHaveBeenCalled();
 	});
 
 	it("does not report a fake success when the update command cannot run", async () => {
@@ -137,13 +138,15 @@ describe("settings.updateServer", () => {
 			latestVersion: "v9.9.9",
 			updateAvailable: true,
 		});
-		mockSpawnAsync.mockResolvedValue({ stdout: "", stderr: null });
+		mockReloadDockerResource.mockResolvedValue(undefined);
 
 		await expect(caller.updateServer()).resolves.toBe(true);
 
-		expect(mockSpawnAsync).toHaveBeenCalledWith(
-			"docker",
-			expect.arrayContaining(["service", "update", "dokploy/dokploy:v9.9.9"]),
+		// The fork updates through reloadDockerResource, which keeps the running image repository.
+		expect(mockReloadDockerResource).toHaveBeenCalledWith(
+			"dokploy",
+			undefined,
+			"v9.9.9",
 		);
 	});
 });
