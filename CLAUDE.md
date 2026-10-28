@@ -47,7 +47,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Logs & Metrics**: Org-level telemetry providers (Loki, Datadog, Better Stack, Elasticsearch, Splunk HEC, AWS CloudWatch, Prometheus remote-write, New Relic, InfluxDB) that receive container logs and metrics via per-server `dokploy-vector` (Vector) and `dokploy-cadvisor` Swarm services. Settings → Logs & Metrics; permission `telemetryProvider` (self-hosted, requires a Swarm manager).
 - **Users / Teams / Orgs**: Multi-tenant orgs, RBAC (owner/admin/member + custom roles, per-org default role, `server.terminal` permission), invitations, onboarding wizard for new users, self-service account deletion.
 - **Sessions & Passkeys**: Active session management (Settings → Sessions) and WebAuthn passkey sign-in (`@better-auth/passkey`).
-- **Audit Logs**: Compliance trail.
+- **Audit Logs**: Compliance trail with date-range filters and CSV/TSV/JSON export of the filtered logs (up to 10,000 rows).
 - **SSO**: SAML/OIDC.
 - **Whitelabeling**: Custom branding, with optional dual-mode branding (separate light-theme logo, login logo and favicon) and a custom forgot-password flow (`supportEmail` / `passwordResetGuide`, self-hosted).
 - **Billing**: Stripe subscription management (cloud only).
