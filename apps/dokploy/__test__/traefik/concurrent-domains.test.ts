@@ -54,6 +54,11 @@ const domainFor = (uniqueConfigKey: number): Domain => ({
 	middlewares: null,
 	forwardAuthEnabled: false,
 	enabled: true,
+	cloudflareZoneId: null,
+	cloudflareRecordId: null,
+	cloudflareSyncStatus: null,
+	cloudflareSyncedAt: null,
+	cloudflareSyncError: null,
 });
 
 const keys = [1, 2, 3, 4, 5];
