@@ -22,7 +22,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 
 - **Applications**: Deploy Node.js, PHP, Python, Go, Ruby, Java, etc. from Git or Docker images with build logs, rollback, and preview deployments.
 - **Databases**: Managed PostgreSQL, MySQL, MariaDB, MongoDB, Redis, and LibSQL services.
-- **Docker Compose**: Native multi-service deployments from compose files; optional `.env` file generation, pull-images-before-deploy, and fresh-volume redeploys.
+- **Docker Compose**: Native multi-service deployments from compose files; optional `.env` file generation, pull-images-before-deploy, fresh-volume redeploys, and optional volume deletion when deleting a service.
 - **Overview**: Cross-project dashboard of all services the user can access (`/dashboard/overview`).
 - **Service Transfer**: Move applications, databases, and compose services between servers.
 - **Service Icons**: Custom icons for services and compose templates.
@@ -41,7 +41,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Environment Variables**: Per-service and inherited from project/environment, secure storage, editor autocomplete.
 - **Secrets (Vault Providers)**: Org-level external secret stores (HashiCorp Vault, Infisical, AWS Secrets Manager, AWS Parameter Store, Doppler, Azure Key Vault, Scaleway, Phase) referenced from env vars via `${{vault.…}}`. Settings → Secrets; permission `vaultProvider`.
 - **DNS Providers**: Org-level DNS provider credentials (Cloudflare, Route 53, Porkbun, Infomaniak, OVH with optional zone restriction) for DNS record management on domains. Settings → DNS Providers; permission `dnsProvider`. Separate from the fork's Cloudflare Tunnel integration.
-- **Volumes & Mounts**: Persistent + bind mounts.
+- **Volumes & Mounts**: Persistent + bind + file mounts; the file mount editor reads the current file from disk and refuses to overwrite it if it changed since opening.
 - **CLI/API**: tRPC + OpenAPI (`@dokploy/trpc-openapi`) for programmatic management; Swagger UI at `/swagger`.
 - **AI Configuration**: Multi-provider LLM integration (Anthropic, OpenAI, Azure, Cohere, Mistral, DeepInfra, Ollama) for assistance features. Gated by the `ai` permission resource (owner/admin by default; members need a custom role).
 - **Logs & Metrics**: Org-level telemetry providers (Loki, Datadog, Better Stack, Elasticsearch, Splunk HEC, AWS CloudWatch, Prometheus remote-write, New Relic, InfluxDB) that receive container logs and metrics via per-server `dokploy-vector` (Vector) and `dokploy-cadvisor` Swarm services. Settings → Logs & Metrics; permission `telemetryProvider` (self-hosted, requires a Swarm manager).
@@ -91,7 +91,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Backend**: tRPC 11 server in `apps/dokploy/server/`, business logic in `packages/server/`. Standalone Hono services for API gateway and BullMQ job scheduler.
 - **Database**: PostgreSQL via `postgres` driver 3.4.4. **ORM**: Drizzle 0.45.2 + drizzle-kit 0.31.4. Schema lives in `packages/server/src/db/schema/`. Migrations: schema-first, runtime via `apps/dokploy/migration.ts`.
 - **Auth**: `better-auth` 1.6.23 with `@better-auth/sso`, `@better-auth/api-key`, `@better-auth/passkey`, organization plugin, 2FA. Password hashing: `bcrypt`. Crypto: `@oslojs/crypto`.
-- **API**: tRPC 11.10 (`@trpc/server`, `@trpc/client`, `@trpc/next`, `@trpc/react-query`) + `@dokploy/trpc-openapi` 0.0.18 for OpenAPI generation. SuperJSON serialization. Validation via `zod` 4.3.6 + `drizzle-zod` 0.8.3.
+- **API**: tRPC 11.10 (`@trpc/server`, `@trpc/client`, `@trpc/next`, `@trpc/react-query`) + `@dokploy/trpc-openapi` 0.0.18 for OpenAPI generation. SuperJSON serialization. Validation via `zod` 4.6.6 + `drizzle-zod` 0.8.3.
 - **Forms**: `react-hook-form` 7.71 + `@hookform/resolvers` (zod / standard-schema resolver).
 - **State / Data**: `@tanstack/react-query` 5.90 (via tRPC), `@tanstack/react-table` 8.21.
 - **Jobs / Queue**: BullMQ 5.67 backed by Redis (`ioredis` / `redis`). Standalone scheduler in `apps/schedules/`.
