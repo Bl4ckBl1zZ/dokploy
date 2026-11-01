@@ -14,7 +14,7 @@
 - **Tagline / Description**: Open Source Alternative to Vercel, Heroku and Netlify.
 - **Core Purpose**: A free, self-hostable Platform as a Service (PaaS) that simplifies deployment and management of applications, databases, and infrastructure on user-owned VPSs. Targets developers and teams who want Heroku/Vercel-like ergonomics on their own servers, with optional managed offering via Dokploy Cloud.
 
-The codebase distinguishes between **self-hosted** and **Dokploy Cloud** via the `IS_CLOUD` env flag. Cloud disables monitoring, schedules, Docker/Swarm management, Traefik FS editor, and adds Stripe billing. All other features (SSO, whitelabeling, custom roles, audit logs, etc.) are available to every install with no licensing gate.
+The codebase distinguishes between **self-hosted** and **Dokploy Cloud** via the `IS_CLOUD` env flag. Cloud disables monitoring, schedules, Docker/Swarm management, Traefik FS editor, and adds Stripe billing and PostHog product analytics (never active on self-hosted). All other features (SSO, whitelabeling, custom roles, audit logs, etc.) are available to every install with no licensing gate.
 
 Self-hosted Dokploy updates preserve the currently running `dokploy` Docker image repository so forks keep updating from their own package namespace. Swarm updates for the Dokploy service use `start-first` with rollback to avoid stopping the old task before the replacement is viable.
 
