@@ -12,8 +12,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { TerminalLine } from "../../docker/logs/terminal-line";
 import { type LogLine, parseLogs } from "../../docker/logs/utils";
+import { VirtualLogList } from "../../docker/logs/virtual-log-list";
 
 interface Props {
 	logPath: string | null;
@@ -33,23 +33,7 @@ export const ShowDeployment = ({
 	const [showExtraLogs, setShowExtraLogs] = useState(false);
 	const [filteredLogs, setFilteredLogs] = useState<LogLine[]>([]);
 	const wsRef = useRef<WebSocket | null>(null);
-	const [autoScroll, setAutoScroll] = useState(true);
-	const scrollRef = useRef<HTMLDivElement>(null);
 	const [copied, setCopied] = useState(false);
-
-	const scrollToBottom = () => {
-		if (autoScroll && scrollRef.current) {
-			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-		}
-	};
-
-	const handleScroll = () => {
-		if (!scrollRef.current) return;
-
-		const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-		const isAtBottom = Math.abs(scrollHeight - scrollTop - clientHeight) < 10;
-		setAutoScroll(isAtBottom);
-	};
 
 	useEffect(() => {
 		if (!open || !logPath) return;
@@ -101,14 +85,6 @@ export const ShowDeployment = ({
 
 		setFilteredLogs(filteredLogsResult);
 	}, [data, showExtraLogs]);
-
-	useEffect(() => {
-		scrollToBottom();
-
-		if (autoScroll && scrollRef.current) {
-			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-		}
-	}, [filteredLogs, autoScroll]);
 
 	const handleCopy = () => {
 		const logContent = filteredLogs
@@ -191,38 +167,15 @@ export const ShowDeployment = ({
 					)}
 				</div>
 
-				<div
-					ref={scrollRef}
-					onScroll={handleScroll}
-					className="h-[60vh] sm:h-[720px] flex-1 min-h-0 overflow-y-auto space-y-0 border p-3 sm:p-4 bg-[#fafafa] dark:bg-[#050506] rounded custom-logs-scrollbar text-xs sm:text-sm"
+				<VirtualLogList
+					logs={filteredLogs.length > 0 ? filteredLogs : optionalErrors}
+					noTimestamp
+					className="h-[60vh] sm:h-[720px] flex-1 min-h-0 bg-[#fafafa] dark:bg-[#050506] text-xs sm:text-sm"
 				>
-					{" "}
-					{filteredLogs.length > 0 ? (
-						filteredLogs.map((log: LogLine, index: number) => (
-							<TerminalLine
-								key={`${log.rawTimestamp ?? ""}-${index}`}
-								log={log}
-								noTimestamp
-							/>
-						))
-					) : (
-						<>
-							{optionalErrors.length > 0 ? (
-								optionalErrors.map((log: LogLine, index: number) => (
-									<TerminalLine
-										key={`extra-${log.rawTimestamp ?? ""}-${index}`}
-										log={log}
-										noTimestamp
-									/>
-								))
-							) : (
-								<div className="flex justify-center items-center h-full text-muted-foreground">
-									<Loader2 className="h-6 w-6 animate-spin" />
-								</div>
-							)}
-						</>
-					)}
-				</div>
+					<div className="flex justify-center items-center h-full text-muted-foreground">
+						<Loader2 className="h-6 w-6 animate-spin" />
+					</div>
+				</VirtualLogList>
 			</DialogContent>
 		</Dialog>
 	);

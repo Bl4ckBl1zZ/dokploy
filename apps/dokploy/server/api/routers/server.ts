@@ -1,4 +1,5 @@
 import {
+	captureEvent,
 	createServer,
 	defaultCommand,
 	deleteServer,
@@ -7,6 +8,7 @@ import {
 	findServersByUserId,
 	findUserById,
 	getAccessibleServerIds,
+	getPostHogSessionId,
 	getPublicIpWithFallback,
 	getServicesByServerId,
 	haveActiveServices,
@@ -105,6 +107,13 @@ export const serverRouter = createTRPCRouter({
 					resourceType: "server",
 					resourceId: project.serverId,
 					resourceName: project.name,
+				});
+				void captureEvent({
+					distinctId: user.id,
+					event: "server_created",
+					organizationId: ctx.session.activeOrganizationId,
+					sessionId: getPostHogSessionId(ctx.req.headers),
+					properties: { server_type: project.serverType },
 				});
 				return project;
 			} catch (error) {

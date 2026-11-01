@@ -186,12 +186,21 @@ ${exec}
 echo "Execution completed."
 `;
 
+// A stopped Traefik must stay startable; keeping its container also keeps its image from `image prune --all`.
+const skipIfTraefikStopped = (command: string) => `
+if docker container inspect --format '{{.State.Running}}' dokploy-traefik dokploy-traefik-previous 2>/dev/null | grep -q false; then
+    echo "Skipping '${command}': dokploy-traefik is stopped"
+else
+    ${command}
+fi
+`;
+
 const cleanupCommands = {
-	containers: "docker container prune --force",
+	containers: skipIfTraefikStopped("docker container prune --force"),
 	images: "docker image prune --all --force",
 	volumes: "docker volume prune --all --force",
 	builders: "docker builder prune --all --force",
-	system: "docker system prune --all --force",
+	system: skipIfTraefikStopped("docker system prune --all --force"),
 };
 
 export const cleanupContainers = async (serverId?: string) => {
@@ -797,13 +806,27 @@ export const generateFileMounts = (
 		});
 };
 
+export const isValidMountFilePath = (filePath: string) => {
+	const relative = path.relative("/base", path.join("/base", filePath));
+	return (
+		!!relative && relative !== ".." && !relative.startsWith(`..${path.sep}`)
+	);
+};
+
+const resolveMountFilePath = (outputPath: string, filePath: string) => {
+	if (!isValidMountFilePath(filePath)) {
+		throw new Error(`Invalid file path: ${filePath}`);
+	}
+	return path.join(outputPath, filePath);
+};
+
 export const createFile = async (
 	outputPath: string,
 	filePath: string,
 	content: string,
 ) => {
 	try {
-		const fullPath = path.join(outputPath, filePath);
+		const fullPath = resolveMountFilePath(outputPath, filePath);
 		if (fullPath.endsWith(path.sep) || filePath.endsWith("/")) {
 			fs.mkdirSync(fullPath, { recursive: true });
 			return;
@@ -811,6 +834,10 @@ export const createFile = async (
 
 		const directory = path.dirname(fullPath);
 		fs.mkdirSync(directory, { recursive: true });
+		// Docker creates missing bind sources as empty directories if the stack was deployed before the mount existed
+		if (fs.statSync(fullPath, { throwIfNoEntry: false })?.isDirectory()) {
+			fs.rmdirSync(fullPath);
+		}
 		fs.writeFileSync(fullPath, content || "");
 	} catch (error) {
 		throw error;
@@ -824,7 +851,7 @@ export const getCreateFileCommand = (
 	filePath: string,
 	content: string,
 ) => {
-	const fullPath = path.join(outputPath, filePath);
+	const fullPath = resolveMountFilePath(outputPath, filePath);
 	if (fullPath.endsWith(path.sep) || filePath.endsWith("/")) {
 		return `mkdir -p ${quote([fullPath])};`;
 	}
@@ -833,6 +860,7 @@ export const getCreateFileCommand = (
 	const encodedContent = encodeBase64(content);
 	return `
 		mkdir -p ${quote([directory])};
+		if [ -d ${quote([fullPath])} ]; then rmdir ${quote([fullPath])}; fi;
 		echo "${encodedContent}" | base64 -d > ${quote([fullPath])};
 	`;
 };

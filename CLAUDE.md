@@ -14,7 +14,7 @@
 - **Tagline / Description**: Open Source Alternative to Vercel, Heroku and Netlify.
 - **Core Purpose**: A free, self-hostable Platform as a Service (PaaS) that simplifies deployment and management of applications, databases, and infrastructure on user-owned VPSs. Targets developers and teams who want Heroku/Vercel-like ergonomics on their own servers, with optional managed offering via Dokploy Cloud.
 
-The codebase distinguishes between **self-hosted** and **Dokploy Cloud** via the `IS_CLOUD` env flag. Cloud disables monitoring, schedules, Docker/Swarm management, Traefik FS editor, and adds Stripe billing. All other features (SSO, whitelabeling, custom roles, audit logs, etc.) are available to every install with no licensing gate.
+The codebase distinguishes between **self-hosted** and **Dokploy Cloud** via the `IS_CLOUD` env flag. Cloud disables monitoring, schedules, Docker/Swarm management, Traefik FS editor, and adds Stripe billing and PostHog product analytics (never active on self-hosted). All other features (SSO, whitelabeling, custom roles, audit logs, etc.) are available to every install with no licensing gate.
 
 Self-hosted Dokploy updates preserve the currently running `dokploy` Docker image repository so forks keep updating from their own package namespace. Swarm updates for the Dokploy service use `start-first` with rollback to avoid stopping the old task before the replacement is viable.
 
@@ -22,7 +22,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 
 - **Applications**: Deploy Node.js, PHP, Python, Go, Ruby, Java, etc. from Git or Docker images with build logs, rollback, and preview deployments.
 - **Databases**: Managed PostgreSQL, MySQL, MariaDB, MongoDB, Redis, and LibSQL services.
-- **Docker Compose**: Native multi-service deployments from compose files; optional `.env` file generation, pull-images-before-deploy, and fresh-volume redeploys.
+- **Docker Compose**: Native multi-service deployments from compose files; optional `.env` file generation, pull-images-before-deploy, fresh-volume redeploys, and optional volume deletion when deleting a service.
 - **Overview**: Cross-project dashboard of all services the user can access (`/dashboard/overview`).
 - **Service Transfer**: Move applications, databases, and compose services between servers.
 - **Service Icons**: Custom icons for services and compose templates.
@@ -41,13 +41,13 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Environment Variables**: Per-service and inherited from project/environment, secure storage, editor autocomplete.
 - **Secrets (Vault Providers)**: Org-level external secret stores (HashiCorp Vault, Infisical, AWS Secrets Manager, AWS Parameter Store, Doppler, Azure Key Vault, Scaleway, Phase) referenced from env vars via `${{vault.…}}`. Settings → Secrets; permission `vaultProvider`.
 - **DNS Providers**: Org-level DNS provider credentials (Cloudflare, Route 53, Porkbun, Infomaniak, OVH with optional zone restriction) for DNS record management on domains. Settings → DNS Providers; permission `dnsProvider`. Separate from the fork's Cloudflare Tunnel integration.
-- **Volumes & Mounts**: Persistent + bind mounts.
+- **Volumes & Mounts**: Persistent + bind + file mounts; the file mount editor reads the current file from disk and refuses to overwrite it if it changed since opening.
 - **CLI/API**: tRPC + OpenAPI (`@dokploy/trpc-openapi`) for programmatic management; Swagger UI at `/swagger`.
 - **AI Configuration**: Multi-provider LLM integration (Anthropic, OpenAI, Azure, Cohere, Mistral, DeepInfra, Ollama) for assistance features. Gated by the `ai` permission resource (owner/admin by default; members need a custom role).
 - **Logs & Metrics**: Org-level telemetry providers (Loki, Datadog, Better Stack, Elasticsearch, Splunk HEC, AWS CloudWatch, Prometheus remote-write, New Relic, InfluxDB) that receive container logs and metrics via per-server `dokploy-vector` (Vector) and `dokploy-cadvisor` Swarm services. Settings → Logs & Metrics; permission `telemetryProvider` (self-hosted, requires a Swarm manager).
 - **Users / Teams / Orgs**: Multi-tenant orgs, RBAC (owner/admin/member + custom roles, per-org default role, `server.terminal` permission), invitations, onboarding wizard for new users, self-service account deletion.
 - **Sessions & Passkeys**: Active session management (Settings → Sessions) and WebAuthn passkey sign-in (`@better-auth/passkey`).
-- **Audit Logs**: Compliance trail.
+- **Audit Logs**: Compliance trail with date-range filters and CSV/TSV/JSON export of the filtered logs (up to 10,000 rows).
 - **SSO**: SAML/OIDC.
 - **Whitelabeling**: Custom branding, with optional dual-mode branding (separate light-theme logo, login logo and favicon) and a custom forgot-password flow (`supportEmail` / `passwordResetGuide`, self-hosted).
 - **Billing**: Stripe subscription management (cloud only).
@@ -91,7 +91,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Backend**: tRPC 11 server in `apps/dokploy/server/`, business logic in `packages/server/`. Standalone Hono services for API gateway and BullMQ job scheduler.
 - **Database**: PostgreSQL via `postgres` driver 3.4.4. **ORM**: Drizzle 0.45.2 + drizzle-kit 0.31.4. Schema lives in `packages/server/src/db/schema/`. Migrations: schema-first, runtime via `apps/dokploy/migration.ts`.
 - **Auth**: `better-auth` 1.6.23 with `@better-auth/sso`, `@better-auth/api-key`, `@better-auth/passkey`, organization plugin, 2FA. Password hashing: `bcrypt`. Crypto: `@oslojs/crypto`.
-- **API**: tRPC 11.10 (`@trpc/server`, `@trpc/client`, `@trpc/next`, `@trpc/react-query`) + `@dokploy/trpc-openapi` 0.0.18 for OpenAPI generation. SuperJSON serialization. Validation via `zod` 4.3.6 + `drizzle-zod` 0.8.3.
+- **API**: tRPC 11.10 (`@trpc/server`, `@trpc/client`, `@trpc/next`, `@trpc/react-query`) + `@dokploy/trpc-openapi` 0.0.18 for OpenAPI generation. SuperJSON serialization. Validation via `zod` 4.6.6 + `drizzle-zod` 0.8.3.
 - **Forms**: `react-hook-form` 7.71 + `@hookform/resolvers` (zod / standard-schema resolver).
 - **State / Data**: `@tanstack/react-query` 5.90 (via tRPC), `@tanstack/react-table` 8.21.
 - **Jobs / Queue**: BullMQ 5.67 backed by Redis (`ioredis` / `redis`). Standalone scheduler in `apps/schedules/`.
