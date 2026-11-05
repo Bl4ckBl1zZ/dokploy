@@ -10,6 +10,7 @@ import {
 	Pencil,
 	ServerIcon,
 	Settings,
+	ShieldCheck,
 	Terminal,
 	Trash2,
 	User,
@@ -43,6 +44,7 @@ import { TerminalModal } from "../web-server/terminal-modal";
 import { ShowServerActions } from "./actions/show-server-actions";
 import { DeleteServerModal } from "./delete-server-modal";
 import { HandleServers } from "./handle-servers";
+import { ShowServerSecurity } from "./security/show-server-security";
 import { SetupServer } from "./setup-server";
 import { ShowDockerContainersModal } from "./show-docker-containers-modal";
 import { ShowMonitoringModal } from "./show-monitoring-modal";
@@ -352,6 +354,28 @@ export const ShowServers = () => {
 																							</TerminalModal>
 																							<TooltipContent>
 																								<p>Terminal</p>
+																							</TooltipContent>
+																						</Tooltip>
+																					)}
+
+																				{server.sshKeyId &&
+																					permissions?.server.read && (
+																						<Tooltip>
+																							<ShowServerSecurity
+																								serverId={server.serverId}
+																							>
+																								<TooltipTrigger asChild>
+																									<Button
+																										variant="outline"
+																										size="icon"
+																										className="h-9 w-9"
+																									>
+																										<ShieldCheck className="h-4 w-4" />
+																									</Button>
+																								</TooltipTrigger>
+																							</ShowServerSecurity>
+																							<TooltipContent>
+																								<p>Security</p>
 																							</TooltipContent>
 																						</Tooltip>
 																					)}

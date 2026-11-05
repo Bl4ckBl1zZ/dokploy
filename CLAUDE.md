@@ -29,8 +29,10 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Backups & Restore**: Scheduled backups for all DB types to S3-compatible destinations with retention policies, custom backup file names, and browsing/downloading backup files from the UI.
 - **Volume Backups**: Snapshot/restore of Docker volumes.
 - **Multi-Server / Multi-Node**: SSH-managed remote servers and Docker Swarm clusters.
+- **Server Security**: Per-server security panel for SSH-managed servers (Remote Servers → Security): Fail2ban setup and banned IPs, SSH hardening (password auth, root login, max auth tries) with automatic revert unless confirmed, exposed ports with UFW status, pending package updates, active SSH sessions and recent activity. Uses the `server` permission (read to view, create to change).
 - **Templates**: One-click deploys of OSS apps (Plausible, Pocketbase, Cal.com, etc.).
 - **Traefik Integration**: Auto-generated dynamic routing, SSL via Let's Encrypt, custom certs; in-place Traefik version updates from Web Server / server actions when the running version is older than the recommended one.
+- **Panel Port Toggle**: Web Server actions can unpublish the panel's port 3000 once a panel domain is set and the panel is opened through that domain, with a shown `docker service update` recovery command (self-hosted, Swarm only).
 - **Real-time Monitoring**: CPU/memory/storage/network metrics with threshold alerts (self-hosted). Members with access to a service can view its container monitoring.
 - **Docker Management**: Container inspection, exec terminals (xterm.js), logs streaming.
 - **Schedules / Cron**: Scheduled deployments, redeploys, custom commands (self-hosted).
