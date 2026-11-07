@@ -238,7 +238,7 @@ No central env validation (no `env.ts` / t3-env / Zod env schema). `process.env`
 - `DATABASE_URL`, `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_PASSWORD_FILE`, `POSTGRES_WAIT_TIMEOUT`, `POSTGRES_WAIT_RETRY`
 
 **Auth & OAuth**
-- `BETTER_AUTH_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (optional canonical origin for reset/verification email links; falls back to the panel host, then `http://<serverIp>:3000`), `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 
 **Email / SMTP**
 - `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_ADDRESS`
