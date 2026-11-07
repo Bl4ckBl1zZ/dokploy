@@ -8,11 +8,6 @@ const mockDb = vi.hoisted(() => ({
 }));
 vi.mock("@dokploy/server/db", () => ({ db: mockDb }));
 
-const mockHasValidLicense = vi.hoisted(() => vi.fn());
-vi.mock("@dokploy/server/services/proprietary/license-key", () => ({
-	hasValidLicense: mockHasValidLicense,
-}));
-
 vi.mock("@dokploy/server/constants", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@dokploy/server/constants")>()),
 	IS_CLOUD: false,
@@ -25,13 +20,8 @@ const session = { userId: "user-1", activeOrganizationId: "org-a" };
 // org-a owns srv-a and srv-c; srv-b belongs to another org.
 const orgServers = [{ serverId: "srv-a" }, { serverId: "srv-c" }];
 
-const setMember = (
-	role: string,
-	accessedServers: string[],
-	licensed: boolean,
-) => {
+const setMember = (role: string, accessedServers: string[]) => {
 	mockDb.query.member.findFirst.mockResolvedValue({ role, accessedServers });
-	mockHasValidLicense.mockResolvedValue(licensed);
 };
 
 beforeEach(() => {
@@ -45,54 +35,55 @@ const deny = (p: Promise<unknown>) =>
 
 describe("assertServerAccess — legitimate access is preserved per role", () => {
 	it("owner reaches any server in the org (ignores accessedServers)", async () => {
-		setMember("owner", [], true);
+		setMember("owner", []);
 		await allow(assertServerAccess(session, "srv-a"));
 		await allow(assertServerAccess(session, "srv-c"));
 	});
 
 	it("admin reaches any server in the org", async () => {
-		setMember("admin", [], true);
+		setMember("admin", []);
 		await allow(assertServerAccess(session, "srv-a"));
 		await allow(assertServerAccess(session, "srv-c"));
 	});
 
-	it("member in an UNLICENSED org reaches any server in the org", async () => {
-		setMember("member", [], false);
-		await allow(assertServerAccess(session, "srv-a"));
-		await allow(assertServerAccess(session, "srv-c"));
-	});
-
-	it("licensed member reaches a server in its accessedServers", async () => {
-		setMember("member", ["srv-a"], true);
+	it("member reaches a server in its accessedServers", async () => {
+		setMember("member", ["srv-a"]);
 		await allow(assertServerAccess(session, "srv-a"));
 	});
 
 	it("custom role reaches a server in its accessedServers", async () => {
-		setMember("deployer", ["srv-c"], true);
+		setMember("deployer", ["srv-c"]);
 		await allow(assertServerAccess(session, "srv-c"));
 	});
 
 	it("any role may act on the local host (no serverId) on self-hosted", async () => {
-		setMember("member", [], true);
+		setMember("member", []);
 		await allow(assertServerAccess(session, null));
 	});
 });
 
 describe("assertServerAccess — unauthorized access is blocked", () => {
+	// The fork has no license gate, so members only reach servers they were granted.
+	it("rejects every server for a member with no grants", async () => {
+		setMember("member", []);
+		await deny(assertServerAccess(session, "srv-a"));
+		await deny(assertServerAccess(session, "srv-c"));
+	});
+
 	it("rejects a server of another organization for everyone", async () => {
 		for (const role of ["owner", "admin", "member"]) {
-			setMember(role, ["srv-a"], true);
+			setMember(role, ["srv-a"]);
 			await deny(assertServerAccess(session, "srv-b"));
 		}
 	});
 
-	it("rejects a server the licensed member was not granted", async () => {
-		setMember("member", ["srv-a"], true);
+	it("rejects a server the member was not granted", async () => {
+		setMember("member", ["srv-a"]);
 		await deny(assertServerAccess(session, "srv-c"));
 	});
 
 	it("rejects a custom role for a server outside its grant", async () => {
-		setMember("deployer", ["srv-a"], true);
+		setMember("deployer", ["srv-a"]);
 		await deny(assertServerAccess(session, "srv-c"));
 	});
 });
@@ -105,13 +96,10 @@ describe("assertServerAccess on Cloud", () => {
 			IS_CLOUD: true,
 		}));
 		vi.doMock("@dokploy/server/db", () => ({ db: mockDb }));
-		vi.doMock("@dokploy/server/services/proprietary/license-key", () => ({
-			hasValidLicense: mockHasValidLicense,
-		}));
 		const { assertServerAccess: cloudAssert } = await import(
 			"@dokploy/server/services/server"
 		);
-		setMember("owner", [], true);
+		setMember("owner", []);
 		await expect(cloudAssert(session, null)).rejects.toMatchObject({
 			code: "UNAUTHORIZED",
 		});
