@@ -3276,9 +3276,6 @@
                       "null"
                     ]
                   },
-                  "environmentId": {
-                    "type": "string"
-                  },
                   "githubId": {
                     "type": [
                       "string",
@@ -10531,9 +10528,6 @@
                         "type": "null"
                       }
                     ]
-                  },
-                  "environmentId": {
-                    "type": "string"
                   },
                   "createdAt": {
                     "type": "string"
@@ -24201,9 +24195,6 @@
                   },
                   "createdAt": {
                     "type": "string"
-                  },
-                  "environmentId": {
-                    "type": "string"
                   }
                 },
                 "required": [
@@ -27333,9 +27324,6 @@
                   "createdAt": {
                     "type": "string"
                   },
-                  "environmentId": {
-                    "type": "string"
-                  },
                   "networkIds": {
                     "anyOf": [
                       {
@@ -29442,9 +29430,6 @@
                   "createdAt": {
                     "type": "string"
                   },
-                  "environmentId": {
-                    "type": "string"
-                  },
                   "replicaSets": {
                     "type": "boolean"
                   },
@@ -30471,10 +30456,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "mountId": {
-                    "type": "string",
-                    "minLength": 1
-                  },
                   "type": {
                     "type": "string",
                     "enum": [
@@ -30495,82 +30476,25 @@
                       "null"
                     ]
                   },
-                  "filePath": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
                   "content": {
                     "type": [
                       "string",
                       "null"
                     ]
                   },
-                  "serviceType": {
-                    "type": "string",
-                    "enum": [
-                      "application",
-                      "postgres",
-                      "mysql",
-                      "mariadb",
-                      "mongo",
-                      "redis",
-                      "compose",
-                      "libsql"
-                    ]
-                  },
                   "mountPath": {
                     "type": "string",
                     "minLength": 1
                   },
-                  "applicationId": {
+                  "filePath": {
                     "type": [
                       "string",
                       "null"
                     ]
                   },
-                  "composeId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "libsqlId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "mariadbId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "mongoId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "mysqlId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "postgresId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "redisId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
+                  "mountId": {
+                    "type": "string",
+                    "minLength": 1
                   },
                   "expectedContent": {
                     "type": [
@@ -32325,9 +32249,6 @@
                     "type": "number"
                   },
                   "createdAt": {
-                    "type": "string"
-                  },
-                  "environmentId": {
                     "type": "string"
                   },
                   "networkIds": {
@@ -39681,9 +39602,6 @@
                   "createdAt": {
                     "type": "string"
                   },
-                  "environmentId": {
-                    "type": "string"
-                  },
                   "networkIds": {
                     "anyOf": [
                       {
@@ -41438,12 +41356,6 @@
                       "string",
                       "null"
                     ]
-                  },
-                  "createdAt": {
-                    "type": "string"
-                  },
-                  "organizationId": {
-                    "type": "string"
                   },
                   "env": {
                     "type": "string"
@@ -43488,9 +43400,6 @@
                   },
                   "replicas": {
                     "type": "number"
-                  },
-                  "environmentId": {
-                    "type": "string"
                   },
                   "networkIds": {
                     "anyOf": [
@@ -56070,36 +55979,14 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "firstName": {
-                    "type": "string"
-                  },
-                  "lastName": {
-                    "type": "string"
-                  },
-                  "isRegistered": {
-                    "type": "boolean"
-                  },
-                  "expirationDate": {
-                    "type": "string"
-                  },
-                  "createdAt2": {
-                    "type": "string"
-                  },
-                  "createdAt": {
+                  "image": {
                     "type": [
                       "string",
                       "null"
                     ]
                   },
-                  "twoFactorEnabled": {
-                    "type": [
-                      "boolean",
-                      "null"
-                    ]
+                  "allowImpersonation": {
+                    "type": "boolean"
                   },
                   "email": {
                     "type": "string",
@@ -56107,64 +55994,16 @@
                     "format": "email",
                     "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
                   },
-                  "emailVerified": {
-                    "type": "boolean"
-                  },
-                  "image": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "banned": {
-                    "type": [
-                      "boolean",
-                      "null"
-                    ]
-                  },
-                  "banReason": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "banExpires": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "updatedAt": {
-                    "type": "string"
-                  },
-                  "enablePaidFeatures": {
-                    "type": "boolean"
-                  },
-                  "allowImpersonation": {
-                    "type": "boolean"
-                  },
-                  "stripeCustomerId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "stripeSubscriptionId": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
-                  },
-                  "serversQuantity": {
-                    "type": "number"
-                  },
-                  "sendInvoiceNotifications": {
-                    "type": "boolean"
-                  },
                   "password": {
                     "type": "string"
                   },
                   "currentPassword": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
                     "type": "string"
                   }
                 }
@@ -67653,9 +67492,6 @@
                     "minLength": 1
                   },
                   "description": {
-                    "type": "string"
-                  },
-                  "projectId": {
                     "type": "string"
                   },
                   "env": {
