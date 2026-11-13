@@ -330,6 +330,11 @@ export const scheduleRouter = createTRPCRouter({
 					}
 				}
 			}
+			await assertHostScheduleAccess(
+				ctx,
+				schedule.scheduleType,
+				schedule.serverId,
+			);
 			return schedule;
 		}),
 
