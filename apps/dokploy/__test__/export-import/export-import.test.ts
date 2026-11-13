@@ -392,6 +392,36 @@ describe("importBundle", () => {
 		expect(result.warnings.join("\n")).toMatch(/source server's IP/);
 	});
 
+	it("imports Cloudflare-managed domains without the source's zone and DNS record", async () => {
+		const payload = await exportedPayload();
+		const app = payload.services.find((s) => s.kind === "application");
+		const [domain] = app?.domains as Record<string, unknown>[];
+		Object.assign(domain!, {
+			cloudflareZoneId: "zone-from-source",
+			cloudflareRecordId: "record-from-source",
+			cloudflareSyncStatus: "synced",
+			cloudflareSyncedAt: "2026-11-01T00:00:00.000Z",
+			cloudflareSyncError: null,
+		});
+		const { db, insertsInto } = fakeImportDb({});
+		const result = await importBundle(db, payload, {
+			organizationId: "org",
+			serverId: null,
+		});
+		const [inserted] = insertsInto(domains);
+		expect(inserted).toBeDefined();
+		for (const field of [
+			"cloudflareZoneId",
+			"cloudflareRecordId",
+			"cloudflareSyncStatus",
+			"cloudflareSyncedAt",
+			"cloudflareSyncError",
+		]) {
+			expect(inserted).not.toHaveProperty(field);
+		}
+		expect(result.warnings.join("\n")).toMatch(/managed by Cloudflare/);
+	});
+
 	it("drops libsql gRPC and admin ports that are already published", async () => {
 		const payload = await exportedPayload();
 		payload.services.push({

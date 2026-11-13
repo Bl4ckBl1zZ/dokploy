@@ -143,6 +143,14 @@ const omit = (row: Row, keys: string[]): Row => {
 	return result;
 };
 
+const CLOUDFLARE_DOMAIN_FIELDS = [
+	"cloudflareZoneId",
+	"cloudflareRecordId",
+	"cloudflareSyncStatus",
+	"cloudflareSyncedAt",
+	"cloudflareSyncError",
+];
+
 const SERVICE_TABLES = {
 	application: applications,
 	compose,
@@ -304,8 +312,20 @@ const insertChildren = async (
 					`Domain ${host} on "${name}" used forward auth; it was imported disabled. Set up forward auth on this server before enabling it.`,
 				);
 			}
+			// The zone and DNS record belong to the source instance; reusing the record
+			// id would let this copy overwrite or delete the original's record.
+			if (row.cloudflareZoneId) {
+				warnings.push(
+					`Domain ${host} on "${name}" was managed by Cloudflare; it was imported without its Cloudflare DNS record. Turn on Cloudflare management for it again.`,
+				);
+			}
 			await tx.insert(domains).values({
-				...omit(row, ["domainId", "uniqueConfigKey", "previewDeploymentId"]),
+				...omit(row, [
+					"domainId",
+					"uniqueConfigKey",
+					"previewDeploymentId",
+					...CLOUDFLARE_DOMAIN_FIELDS,
+				]),
 				host,
 				enabled: conflict || forwardAuth ? false : row.enabled,
 				forwardAuthEnabled: false,
