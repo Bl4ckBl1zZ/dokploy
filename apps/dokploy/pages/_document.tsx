@@ -138,7 +138,10 @@ Document.getInitialProps = async (
 			appName = config.appName;
 			appDescription = config.appDescription;
 			ogImageUrl = config.ogImageUrl;
-			customCss = config.customCss ? sanitizeCustomCss(config.customCss) : null;
+			// A raw "<" could close the <style> block; "\3C " is the same character to CSS.
+			customCss = config.customCss
+				? sanitizeCustomCss(config.customCss).replace(/</g, "\\3C ")
+				: null;
 			faviconHref = config.faviconUrl || null;
 			faviconLightHref = config.faviconLightUrl || null;
 		}

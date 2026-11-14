@@ -38,6 +38,7 @@ import { portRouter } from "./routers/port";
 import { postgresRouter } from "./routers/postgres";
 import { previewDeploymentRouter } from "./routers/preview-deployment";
 import { projectRouter } from "./routers/project";
+import { projectExportImportRouter } from "./routers/project-export-import";
 import { redirectsRouter } from "./routers/redirects";
 import { redisRouter } from "./routers/redis";
 import { registryRouter } from "./routers/registry";
@@ -128,6 +129,7 @@ export const appRouter = createTRPCRouter({
 	patch: patchRouter,
 	overview: overviewRouter,
 	transfer: transferRouter,
+	projectExportImport: projectExportImportRouter,
 });
 
 // export type definition of API

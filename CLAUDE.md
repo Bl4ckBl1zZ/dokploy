@@ -25,10 +25,11 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Docker Compose**: Native multi-service deployments from compose files; optional `.env` file generation, pull-images-before-deploy, fresh-volume redeploys, and optional volume deletion when deleting a service.
 - **Overview**: Cross-project dashboard of all services the user can access (`/dashboard/overview`).
 - **Service Transfer**: Move applications, databases, and compose services between servers.
+- **Project Export / Import**: Owners and admins export a project (or selected services) as a passphrase-encrypted `.dokploy` bundle and import it on another instance or server. Git providers, registries and uploaded files must be reconnected; Cloudflare-managed domains are imported without their Cloudflare DNS record.
 - **Service Icons**: Custom icons for services and compose templates.
 - **Backups & Restore**: Scheduled backups for all DB types to S3-compatible destinations with retention policies, custom backup file names, and browsing/downloading backup files from the UI.
 - **Volume Backups**: Snapshot/restore of Docker volumes.
-- **Multi-Server / Multi-Node**: SSH-managed remote servers and Docker Swarm clusters.
+- **Multi-Server / Multi-Node**: SSH-managed remote servers and Docker Swarm clusters. New servers connect either by running a one-time command on the server (Dokploy generates the SSH key, `/api/connect/[token]`) or manually with an existing SSH key.
 - **Server Security**: Per-server security panel for SSH-managed servers (Remote Servers → Security): Fail2ban setup and banned IPs, SSH hardening (password auth, root login, max auth tries) with automatic revert unless confirmed, exposed ports with UFW status, pending package updates, active SSH sessions and recent activity. Uses the `server` permission (read to view, create to change).
 - **Templates**: One-click deploys of OSS apps (Plausible, Pocketbase, Cal.com, etc.).
 - **Traefik Integration**: Auto-generated dynamic routing, SSL via Let's Encrypt, custom certs; in-place Traefik version updates from Web Server / server actions when the running version is older than the recommended one.
