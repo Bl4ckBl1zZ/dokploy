@@ -87,7 +87,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 ## Tech Stack
 
 - **Framework (frontend)**: Next.js 16.3.8 (Pages Router), React 18.2.0
-- **Frameworks (microservices)**: Hono 4.11 (`apps/api`, `apps/schedules`)
+- **Frameworks (microservices)**: Hono 4.13 (`apps/api`, `apps/schedules`)
 - **Language**: TypeScript 7 (Node 24.22.1+, see `.nvmrc`)
 - **Styling**: Tailwind CSS 3.4.17 with `tailwindcss-animate`, `@tailwindcss/typography`, `tailwind-merge`, `class-variance-authority`, `clsx`. Theme via CSS variables (HSL); base color `zinc`. Dark mode via `next-themes` 0.2.1.
 - **UI Components**: shadcn/ui (Radix UI primitives) — ~44 components in `apps/dokploy/components/ui/`. Icon library: `lucide-react` 0.469.0. Code editor: `@uiw/react-codemirror`. Terminal: `xterm` + `@xterm/addon-attach`. Toasts: `sonner` 1.7.4.
