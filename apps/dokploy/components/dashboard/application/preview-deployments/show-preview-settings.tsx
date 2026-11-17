@@ -469,8 +469,7 @@ export const ShowPreviewSettings = ({ applicationId }: Props) => {
 											Protect previews with SSO
 										</FormLabel>
 										<FormDescription>
-											Require visitors to log in through your identity
-											provider.
+											Require visitors to log in through your identity provider.
 										</FormDescription>
 									</div>
 									<Switch
