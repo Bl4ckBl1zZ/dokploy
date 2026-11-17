@@ -20,10 +20,11 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 
 ### Features
 
-- **Applications**: Deploy Node.js, PHP, Python, Go, Ruby, Java, etc. from Git or Docker images with build logs, rollback, and preview deployments.
+- **Applications**: Deploy Node.js, PHP, Python, Go, Ruby, Java, etc. from Git or Docker images with build logs, rollback, and preview deployments (optionally protected with SSO forward auth).
 - **Databases**: Managed PostgreSQL, MySQL, MariaDB, MongoDB, Redis, and LibSQL services.
 - **Docker Compose**: Native multi-service deployments from compose files; optional `.env` file generation, pull-images-before-deploy, fresh-volume redeploys, and optional volume deletion when deleting a service.
 - **Overview**: Cross-project dashboard of all services the user can access (`/dashboard/overview`).
+- **Sandboxes**: Short-lived, resource-limited containers (templates: Ubuntu, Alpine, Python, Node, Bun, Deno) on the Dokploy host or a remote server, with command exec (also streamed over WebSocket), file read/write, isolated or internet network mode and an auto-kill timeout. Dashboard at `/dashboard/sandboxes`, also exposed over the API; permission `sandbox`.
 - **Service Transfer**: Move applications, databases, and compose services between servers.
 - **Project Export / Import**: Owners and admins export a project (or selected services) as a passphrase-encrypted `.dokploy` bundle and import it on another instance or server. Git providers, registries and uploaded files must be reconnected; Cloudflare-managed domains are imported without their Cloudflare DNS record.
 - **Service Icons**: Custom icons for services and compose templates.
@@ -54,6 +55,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **SSO**: SAML/OIDC.
 - **Whitelabeling**: Custom branding, with optional dual-mode branding (separate light-theme logo, login logo and favicon) and a custom forgot-password flow (`supportEmail` / `passwordResetGuide`, self-hosted).
 - **Billing**: Stripe subscription management (cloud only).
+- **Cloud Onboarding**: Guided first-run flow on Dokploy Cloud (path, provider, connect, plan and deploy screens) with return and trial-expiry emails (cloud only).
 
 ## TypeScript Rules
 
@@ -201,7 +203,7 @@ istanbul-v3/
 
 - **Sidebar** (`apps/dokploy/components/layouts/side.tsx` + `components/ui/sidebar.tsx`): `SidebarProvider` context wraps the dashboard. Collapsible on desktop (toggle: ⌘B), Sheet overlay on mobile. State persisted in `sidebar:state` cookie (7-day TTL). Structure: Header → Content (groups w/ `SidebarMenu` + `SidebarMenuSub`) → Footer.
 - **Sections (sidebar)**:
-  - **Home**: Home, Projects, Overview, Monitoring*, Schedules*, Traefik FS*, Docker*, Requests* (* = self-hosted only).
+  - **Home**: Home, Projects, Overview, Monitoring*, Schedules*, Sandboxes, Traefik FS*, Docker*, Requests* (* = self-hosted only).
   - **Settings**: Web Server*, Profile, Sessions, Remote Servers, Deployments, Users, Audit Logs, SSH Keys, AI, Tags, Git, Cloudflare, Tailscale, Registry, Logs & Metrics, Secrets, DNS Providers, S3 Destinations, Certificates, Notifications, Billing (cloud), SSO (admin), Whitelabeling (owner).
   - **Help**: Documentation, Support Discord (external links).
 - **Top of page**: Breadcrumb trail (`components/shared/breadcrumb-sidebar.tsx`, `advance-breadcrumb.tsx`) + `UserNav` with theme toggle.
