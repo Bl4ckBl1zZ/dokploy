@@ -802,6 +802,7 @@ export const settingsRouter = createTRPCRouter({
 					"sso",
 					"organization",
 					"previewDeployment",
+					"sandbox",
 				],
 			});
 

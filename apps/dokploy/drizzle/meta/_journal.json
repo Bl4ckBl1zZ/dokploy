@@ -1303,6 +1303,13 @@
       "when": 1792845512005,
       "tag": "0185_gifted_korath",
       "breakpoints": true
+    },
+    {
+      "idx": 186,
+      "version": "7",
+      "when": 1794919172733,
+      "tag": "0186_acoustic_quicksilver",
+      "breakpoints": true
     }
   ]
 }
