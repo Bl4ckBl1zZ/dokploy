@@ -1,5 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import {
+	AlertTriangle,
 	ArrowUpDown,
 	CheckCircle2,
 	ExternalLink,
@@ -185,11 +186,13 @@ export const createColumns = ({
 									<Badge
 										variant="outline"
 										className={
-											validationState?.isValid
-												? "bg-green-500/10 text-green-500 cursor-pointer"
-												: validationState?.error
-													? "bg-red-500/10 text-red-500 cursor-pointer"
-													: "bg-yellow-500/10 text-yellow-500 cursor-pointer"
+											validationState?.ipMismatch
+												? "bg-yellow-500/10 text-yellow-500 cursor-pointer"
+												: validationState?.isValid
+													? "bg-green-500/10 text-green-500 cursor-pointer"
+													: validationState?.error
+														? "bg-red-500/10 text-red-500 cursor-pointer"
+														: "bg-yellow-500/10 text-yellow-500 cursor-pointer"
 										}
 										onClick={() => handleValidateDomain(domain.host)}
 									>
@@ -197,6 +200,11 @@ export const createColumns = ({
 											<>
 												<Loader2 className="size-3 mr-1 animate-spin" />
 												Checking...
+											</>
+										) : validationState?.ipMismatch ? (
+											<>
+												<AlertTriangle className="size-3 mr-1" />
+												IP mismatch
 											</>
 										) : validationState?.isValid ? (
 											<>
