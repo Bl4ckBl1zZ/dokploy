@@ -49,13 +49,13 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **CLI/API**: tRPC + OpenAPI (`@dokploy/trpc-openapi`) for programmatic management; Swagger UI at `/swagger`.
 - **AI Configuration**: Multi-provider LLM integration (Anthropic, OpenAI, Azure, Cohere, Mistral, DeepInfra, Ollama) for assistance features. Gated by the `ai` permission resource (owner/admin by default; members need a custom role).
 - **Logs & Metrics**: Org-level telemetry providers (Loki, Datadog, Better Stack, Elasticsearch, Splunk HEC, AWS CloudWatch, Prometheus remote-write, New Relic, InfluxDB) that receive container logs and metrics via per-server `dokploy-vector` (Vector) and `dokploy-cadvisor` Swarm services. Settings → Logs & Metrics; permission `telemetryProvider` (self-hosted, requires a Swarm manager).
-- **Users / Teams / Orgs**: Multi-tenant orgs, RBAC (owner/admin/member + custom roles, per-org default role, `server.terminal` permission), invitations, onboarding wizard for new users, self-service account deletion.
+- **Users / Teams / Orgs**: Multi-tenant orgs, RBAC (owner/admin/member + custom roles, per-org default role, `server.terminal` permission; custom roles can restrict which domains members may add and require HTTPS on them), invitations, onboarding wizard for new users, self-service account deletion. New passwords (sign-up, reset, change, admin-set) must be at least 8 characters with upper- and lowercase letters, a number and a special character.
 - **Sessions & Passkeys**: Active session management (Settings → Sessions) and WebAuthn passkey sign-in (`@better-auth/passkey`).
 - **Audit Logs**: Compliance trail with date-range filters and CSV/TSV/JSON export of the filtered logs (up to 10,000 rows).
 - **SSO**: SAML/OIDC.
 - **Whitelabeling**: Custom branding, with optional dual-mode branding (separate light-theme logo, login logo and favicon) and a custom forgot-password flow (`supportEmail` / `passwordResetGuide`, self-hosted).
 - **Billing**: Stripe subscription management (cloud only).
-- **Cloud Onboarding**: Guided first-run flow on Dokploy Cloud (path, provider, connect, plan and deploy screens) with return and trial-expiry emails (cloud only).
+- **Cloud Onboarding**: Guided first-run flow on Dokploy Cloud (path, provider, connect, plan and deploy screens) with return and trial-expiry emails, and daily deactivation of accounts with no plan, active server or session for 6 months (cloud only).
 
 ## TypeScript Rules
 
@@ -109,7 +109,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Linter / Formatter**: Biome 2.5.7.
 - **Testing**: Vitest 4.1 (test fixtures in `apps/dokploy/__test__/`).
 - **Logging**: `pino` 9.4 + `pino-pretty`.
-- **Package Manager**: pnpm 10.22.0 (workspaces).
+- **Package Manager**: pnpm 10.34.9 (workspaces).
 
 ## Project File Structure
 
