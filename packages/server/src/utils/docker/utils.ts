@@ -21,6 +21,7 @@ import type { RedisNested } from "../databases/redis";
 import { execAsync, execAsyncRemote } from "../process/execAsync";
 import { spawnAsync } from "../process/spawnAsync";
 import { getRemoteDocker } from "../servers/remote-docker";
+import { normalizeSwarmHealthCheck } from "./health-check";
 
 interface RegistryAuth {
 	username: string;
@@ -687,10 +688,11 @@ export const generateConfigContainer = (
 	} = application;
 
 	const haveMounts = mounts && mounts.length > 0;
+	const normalizedHealthCheck = normalizeSwarmHealthCheck(healthCheckSwarm);
 
 	return {
-		...(healthCheckSwarm && {
-			HealthCheck: healthCheckSwarm,
+		...(normalizedHealthCheck && {
+			HealthCheck: normalizedHealthCheck,
 		}),
 		...(restartPolicySwarm && {
 			RestartPolicy: restartPolicySwarm,
