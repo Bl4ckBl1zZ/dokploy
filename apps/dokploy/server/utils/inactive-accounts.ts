@@ -1,6 +1,6 @@
 import { getRootAdminIds } from "@dokploy/server/constants";
 import { db } from "@dokploy/server/db";
-import { and, eq, inArray, isNull, notInArray, sql } from "drizzle-orm";
+import { and, inArray, isNull, notInArray, sql } from "drizzle-orm";
 import { scheduleJob } from "node-schedule";
 import { session, user } from "@/server/db/schema";
 
