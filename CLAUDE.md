@@ -20,16 +20,17 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 
 ### Features
 
-- **Applications**: Deploy Node.js, PHP, Python, Go, Ruby, Java, etc. from Git or Docker images with build logs, rollback, and preview deployments.
+- **Applications**: Deploy Node.js, PHP, Python, Go, Ruby, Java, etc. from Git or Docker images with build logs, rollback, and preview deployments (optionally protected with SSO forward auth).
 - **Databases**: Managed PostgreSQL, MySQL, MariaDB, MongoDB, Redis, and LibSQL services.
 - **Docker Compose**: Native multi-service deployments from compose files; optional `.env` file generation, pull-images-before-deploy, fresh-volume redeploys, and optional volume deletion when deleting a service.
 - **Overview**: Cross-project dashboard of all services the user can access (`/dashboard/overview`).
+- **Sandboxes**: Short-lived, resource-limited containers (templates: Ubuntu, Alpine, Python, Node, Bun, Deno) on the Dokploy host or a remote server, with command exec (also streamed over WebSocket), file read/write, isolated or internet network mode and an auto-kill timeout. Dashboard at `/dashboard/sandboxes`, also exposed over the API; permission `sandbox`.
 - **Service Transfer**: Move applications, databases, and compose services between servers.
 - **Project Export / Import**: Owners and admins export a project (or selected services) as a passphrase-encrypted `.dokploy` bundle and import it on another instance or server. Git providers, registries and uploaded files must be reconnected; Cloudflare-managed domains are imported without their Cloudflare DNS record.
 - **Service Icons**: Custom icons for services and compose templates.
 - **Backups & Restore**: Scheduled backups for all DB types to S3-compatible destinations with retention policies, custom backup file names, and browsing/downloading backup files from the UI.
 - **Volume Backups**: Snapshot/restore of Docker volumes.
-- **Multi-Server / Multi-Node**: SSH-managed remote servers and Docker Swarm clusters. New servers connect either by running a one-time command on the server (Dokploy generates the SSH key, `/api/connect/[token]`) or manually with an existing SSH key.
+- **Multi-Server / Multi-Node**: SSH-managed remote servers and Docker Swarm clusters. SSH private keys are encrypted at rest (`encryptedText`, same key as other encrypted columns; older plaintext keys keep working). New servers connect either by running a one-time command on the server (Dokploy generates the SSH key, `/api/connect/[token]`) or manually with an existing SSH key.
 - **Server Security**: Per-server security panel for SSH-managed servers (Remote Servers → Security): Fail2ban setup and banned IPs, SSH hardening (password auth, root login, max auth tries) with automatic revert unless confirmed, exposed ports with UFW status, pending package updates, active SSH sessions and recent activity. Uses the `server` permission (read to view, create to change).
 - **Templates**: One-click deploys of OSS apps (Plausible, Pocketbase, Cal.com, etc.).
 - **Traefik Integration**: Auto-generated dynamic routing, SSL via Let's Encrypt, custom certs; in-place Traefik version updates from Web Server / server actions when the running version is older than the recommended one.
@@ -40,7 +41,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Notifications**: Slack, Discord, Telegram, Email (Resend/SMTP), Teams, Mattermost, Gotify, Lark, Pushover, Ntfy, custom webhooks.
 - **Git Providers**: GitHub (App + webhooks), GitLab, Gitea, Bitbucket OAuth + webhook integrations.
 - **Cloudflare Integration**: Org-level CF token + multi-zone configuration; per-server auto-provisioned remotely-managed Cloudflare Tunnels (cloudflared installed via SSH on server bootstrap, dokploy-tunnel systemd unit); CF-managed domains create/update/delete CNAMEs and tunnel ingress automatically; one-way reconcile pushes Dokploy DB state to Cloudflare. CF settings live under Settings → Cloudflare. Permission: `cloudflare` resource (free-tier, sibling of `gitProviders`).
-- **Domains & SSL**: Multi-domain per service, Let's Encrypt, custom certs, redirects.
+- **Domains & SSL**: Multi-domain per service, Let's Encrypt, custom certs, redirects, and SSO forward auth on application domains with an optional email / group / email-domain allowlist. DNS validation only warns when a domain resolves to a different IP (load balancer, floating IP, NAT).
 - **Environment Variables**: Per-service and inherited from project/environment, secure storage, editor autocomplete.
 - **Secrets (Vault Providers)**: Org-level external secret stores (HashiCorp Vault, Infisical, AWS Secrets Manager, AWS Parameter Store, Doppler, Azure Key Vault, Scaleway, Phase) referenced from env vars via `${{vault.…}}`. Settings → Secrets; permission `vaultProvider`.
 - **DNS Providers**: Org-level DNS provider credentials (Cloudflare, Route 53, Porkbun, Infomaniak, OVH with optional zone restriction) for DNS record management on domains. Settings → DNS Providers; permission `dnsProvider`. Separate from the fork's Cloudflare Tunnel integration.
@@ -48,12 +49,13 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **CLI/API**: tRPC + OpenAPI (`@dokploy/trpc-openapi`) for programmatic management; Swagger UI at `/swagger`.
 - **AI Configuration**: Multi-provider LLM integration (Anthropic, OpenAI, Azure, Cohere, Mistral, DeepInfra, Ollama) for assistance features. Gated by the `ai` permission resource (owner/admin by default; members need a custom role).
 - **Logs & Metrics**: Org-level telemetry providers (Loki, Datadog, Better Stack, Elasticsearch, Splunk HEC, AWS CloudWatch, Prometheus remote-write, New Relic, InfluxDB) that receive container logs and metrics via per-server `dokploy-vector` (Vector) and `dokploy-cadvisor` Swarm services. Settings → Logs & Metrics; permission `telemetryProvider` (self-hosted, requires a Swarm manager).
-- **Users / Teams / Orgs**: Multi-tenant orgs, RBAC (owner/admin/member + custom roles, per-org default role, `server.terminal` permission), invitations, onboarding wizard for new users, self-service account deletion.
+- **Users / Teams / Orgs**: Multi-tenant orgs, RBAC (owner/admin/member + custom roles, per-org default role, `server.terminal` permission; custom roles can restrict which domains members may add and require HTTPS on them), invitations, onboarding wizard for new users, self-service account deletion. New passwords (sign-up, reset, change, admin-set) must be at least 8 characters with upper- and lowercase letters, a number and a special character.
 - **Sessions & Passkeys**: Active session management (Settings → Sessions) and WebAuthn passkey sign-in (`@better-auth/passkey`).
 - **Audit Logs**: Compliance trail with date-range filters and CSV/TSV/JSON export of the filtered logs (up to 10,000 rows).
 - **SSO**: SAML/OIDC.
 - **Whitelabeling**: Custom branding, with optional dual-mode branding (separate light-theme logo, login logo and favicon) and a custom forgot-password flow (`supportEmail` / `passwordResetGuide`, self-hosted).
 - **Billing**: Stripe subscription management (cloud only).
+- **Cloud Onboarding**: Guided first-run flow on Dokploy Cloud (path, provider, connect, plan and deploy screens) with return and trial-expiry emails, and daily deactivation of accounts with no plan, active server or session for 6 months (cloud only).
 
 ## TypeScript Rules
 
@@ -107,7 +109,7 @@ Self-hosted Dokploy updates preserve the currently running `dokploy` Docker imag
 - **Linter / Formatter**: Biome 2.5.7.
 - **Testing**: Vitest 4.1 (test fixtures in `apps/dokploy/__test__/`).
 - **Logging**: `pino` 9.4 + `pino-pretty`.
-- **Package Manager**: pnpm 10.22.0 (workspaces).
+- **Package Manager**: pnpm 10.34.9 (workspaces).
 
 ## Project File Structure
 
@@ -201,7 +203,7 @@ istanbul-v3/
 
 - **Sidebar** (`apps/dokploy/components/layouts/side.tsx` + `components/ui/sidebar.tsx`): `SidebarProvider` context wraps the dashboard. Collapsible on desktop (toggle: ⌘B), Sheet overlay on mobile. State persisted in `sidebar:state` cookie (7-day TTL). Structure: Header → Content (groups w/ `SidebarMenu` + `SidebarMenuSub`) → Footer.
 - **Sections (sidebar)**:
-  - **Home**: Home, Projects, Overview, Monitoring*, Schedules*, Traefik FS*, Docker*, Requests* (* = self-hosted only).
+  - **Home**: Home, Projects, Overview, Monitoring*, Schedules*, Sandboxes, Traefik FS*, Docker*, Requests* (* = self-hosted only).
   - **Settings**: Web Server*, Profile, Sessions, Remote Servers, Deployments, Users, Audit Logs, SSH Keys, AI, Tags, Git, Cloudflare, Tailscale, Registry, Logs & Metrics, Secrets, DNS Providers, S3 Destinations, Certificates, Notifications, Billing (cloud), SSO (admin), Whitelabeling (owner).
   - **Help**: Documentation, Support Discord (external links).
 - **Top of page**: Breadcrumb trail (`components/shared/breadcrumb-sidebar.tsx`, `advance-breadcrumb.tsx`) + `UserNav` with theme toggle.
