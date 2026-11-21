@@ -19776,6 +19776,83 @@
         }
       }
     },
+    "/domain.restriction": {
+      "get": {
+        "operationId": "domain-restriction",
+        "tags": [
+          "domain"
+        ],
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.BAD_REQUEST"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authorization not provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/error.INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/domain.canGenerateTraefikMeDomains": {
       "get": {
         "operationId": "domain-canGenerateTraefikMeDomains",
@@ -56537,7 +56614,7 @@
                   },
                   "password": {
                     "type": "string",
-                    "minLength": 8
+                    "pattern": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$"
                   },
                   "currentPassword": {
                     "type": "string"
@@ -58102,7 +58179,7 @@
                   },
                   "password": {
                     "type": "string",
-                    "minLength": 8
+                    "pattern": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$"
                   },
                   "role": {
                     "type": "string",
@@ -65486,6 +65563,15 @@
                         "type": "string"
                       }
                     }
+                  },
+                  "allowedDomains": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "requireHttps": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -65591,6 +65677,15 @@
                         "type": "string"
                       }
                     }
+                  },
+                  "allowedDomains": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "requireHttps": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
