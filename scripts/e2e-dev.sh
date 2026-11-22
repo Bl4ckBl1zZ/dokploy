@@ -51,7 +51,7 @@ echo "▸ Installing workspace deps"
 pnpm install --prefer-offline --silent
 
 echo "▸ Running Drizzle migrations"
-pnpm --filter dokploy exec tsx -r dotenv/config migration.ts
+pnpm --filter ./apps/dokploy exec tsx -r dotenv/config migration.ts
 
 echo "▸ Starting Dokploy dev server on http://127.0.0.1:3001"
 (cd "$ROOT/apps/dokploy" && pnpm run dev) &

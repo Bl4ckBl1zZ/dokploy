@@ -12,13 +12,18 @@ import {
 	removeForwardAuthProxy,
 	removeForwardAuthSettings,
 	setForwardAuthSettings,
+	setPreviewForwardAuth,
+	setSsoAllowlist,
 } from "@dokploy/server";
 import {
 	apiDeployForwardAuthOnServer,
 	apiForwardAuthDomainTarget,
 	apiForwardAuthServerTarget,
 	apiSetForwardAuthSettings,
+	apiSetPreviewForwardAuth,
+	apiSetSsoAllowlist,
 } from "@dokploy/server/db/schema";
+import { checkServicePermissionAndAccess } from "@dokploy/server/services/permission";
 import { TRPCError } from "@trpc/server";
 import {
 	adminProcedure,
@@ -203,5 +208,37 @@ export const forwardAuthRouter = createTRPCRouter({
 				resourceName: domain.host,
 			});
 			return result;
+		}),
+
+	setPreviewEnabled: withPermission("domain", "create")
+		.input(apiSetPreviewForwardAuth)
+		.mutation(async ({ ctx, input }) => {
+			await checkServicePermissionAndAccess(ctx, input.applicationId, {
+				domain: ["create"],
+			});
+			const application = await setPreviewForwardAuth(input);
+			await audit(ctx, {
+				action: "update",
+				resourceType: "application",
+				resourceId: application.applicationId,
+				resourceName: application.appName,
+			});
+			return { ok: true } as const;
+		}),
+
+	setAllowlist: withPermission("domain", "create")
+		.input(apiSetSsoAllowlist)
+		.mutation(async ({ ctx, input }) => {
+			await checkServicePermissionAndAccess(ctx, input.applicationId, {
+				domain: ["create"],
+			});
+			const application = await setSsoAllowlist(input);
+			await audit(ctx, {
+				action: "update",
+				resourceType: "application",
+				resourceId: application.applicationId,
+				resourceName: application.appName,
+			});
+			return { ok: true } as const;
 		}),
 });

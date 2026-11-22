@@ -235,23 +235,21 @@ export const scheduleRouter = createTRPCRouter({
 					}
 				}
 
-				if (input.scheduleType === "dokploy-server") {
-					if (IS_CLOUD) {
-						throw new TRPCError({
-							code: "UNAUTHORIZED",
-							message: "Host-level schedules are not available in Cloud.",
-						});
-					}
-					const member = await findMemberByUserId(
-						ctx.user.id,
-						ctx.session.activeOrganizationId,
-					);
-					if (member.role !== "owner" && member.role !== "admin") {
-						throw new TRPCError({
-							code: "FORBIDDEN",
-							message: "Only owners and admins can list host-level schedules.",
-						});
-					}
+				if (input.scheduleType === "dokploy-server" && IS_CLOUD) {
+					throw new TRPCError({
+						code: "UNAUTHORIZED",
+						message: "Host-level schedules are not available in Cloud.",
+					});
+				}
+				const member = await findMemberByUserId(
+					ctx.user.id,
+					ctx.session.activeOrganizationId,
+				);
+				if (member.role !== "owner" && member.role !== "admin") {
+					throw new TRPCError({
+						code: "FORBIDDEN",
+						message: "Only owners and admins can list host-level schedules.",
+					});
 				}
 			}
 			const where = {

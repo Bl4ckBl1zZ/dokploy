@@ -43,6 +43,7 @@ import { redirectsRouter } from "./routers/redirects";
 import { redisRouter } from "./routers/redis";
 import { registryRouter } from "./routers/registry";
 import { rollbackRouter } from "./routers/rollbacks";
+import { sandboxRouter } from "./routers/sandbox";
 import { scheduleRouter } from "./routers/schedule";
 import { scimRouter } from "./routers/scim";
 import { securityRouter } from "./routers/security";
@@ -129,6 +130,7 @@ export const appRouter = createTRPCRouter({
 	patch: patchRouter,
 	overview: overviewRouter,
 	transfer: transferRouter,
+	sandbox: sandboxRouter,
 	projectExportImport: projectExportImportRouter,
 });
 

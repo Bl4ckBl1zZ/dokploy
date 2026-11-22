@@ -14,7 +14,6 @@ import {
 	sendInvoiceEmail,
 	sendPaymentFailedEmail,
 } from "@/server/utils/stripe-notifications";
-import { sendTrialExpiringEmail } from "@/server/utils/trial-notifications";
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
@@ -98,6 +97,9 @@ export default async function handler(
 			const subscription = await stripe.subscriptions.retrieve(
 				session.subscription as string,
 			);
+			if (hasEnded(subscription)) {
+				break;
+			}
 			const serversQuantity = getSubscriptionServersQuantity(
 				subscription?.items?.data ?? [],
 			);
@@ -129,14 +131,19 @@ export default async function handler(
 			await updateServersBasedOnQuantity(admin.id, newServersQuantity);
 			break;
 		}
-		case "customer.subscription.trial_will_end": {
-			const trialingSubscription = event.data.object as Stripe.Subscription;
-
-			await sendTrialExpiringEmail(stripe, trialingSubscription, event.created);
-			break;
-		}
 		case "customer.subscription.created": {
 			const newSubscription = event.data.object as Stripe.Subscription;
+
+			const subscription = await stripe.subscriptions.retrieve(
+				newSubscription.id,
+			);
+			// A late event of an older subscription must not replace the current one.
+			if (
+				subscription.status !== "active" &&
+				subscription.status !== "trialing"
+			) {
+				break;
+			}
 
 			await db
 				.update(user)
@@ -153,14 +160,6 @@ export default async function handler(
 		case "customer.subscription.deleted": {
 			const newSubscription = event.data.object as Stripe.Subscription;
 
-			await db
-				.update(user)
-				.set({
-					stripeSubscriptionId: null,
-					serversQuantity: 0,
-				})
-				.where(eq(user.stripeCustomerId, newSubscription.customer as string));
-
 			const admin = await findUserByStripeCustomerId(
 				newSubscription.customer as string,
 			);
@@ -170,6 +169,18 @@ export default async function handler(
 			if (!admin) {
 				break;
 			}
+
+			if (isReplacedSubscription(admin, newSubscription.id)) {
+				break;
+			}
+
+			await db
+				.update(user)
+				.set({
+					stripeSubscriptionId: null,
+					serversQuantity: 0,
+				})
+				.where(eq(user.id, admin.id));
 
 			// Paying through checkout cancels the leftover trial subscription;
 			// that is a conversion, not a lost trial.
@@ -213,6 +224,10 @@ export default async function handler(
 				return res.status(400).send("Webhook Error: Admin not found");
 			}
 
+			if (isReplacedSubscription(admin, newSubscription.id)) {
+				break;
+			}
+
 			const previousStatus = (
 				event.data.previous_attributes as Partial<Stripe.Subscription>
 			)?.status;
@@ -240,8 +255,8 @@ export default async function handler(
 				);
 				await db
 					.update(user)
-					.set({ serversQuantity })
-					.where(eq(user.stripeCustomerId, newSubscription.customer as string));
+					.set({ serversQuantity, stripeSubscriptionId: newSubscription.id })
+					.where(eq(user.id, admin.id));
 
 				await updateServersBasedOnQuantity(admin.id, serversQuantity);
 			} else {
@@ -249,7 +264,7 @@ export default async function handler(
 				await db
 					.update(user)
 					.set({ serversQuantity: 0 })
-					.where(eq(user.stripeCustomerId, newSubscription.customer as string));
+					.where(eq(user.id, admin.id));
 			}
 
 			break;
@@ -279,13 +294,18 @@ export default async function handler(
 				return res.status(400).send("Webhook Error: Admin not found");
 			}
 
+			if (isReplacedSubscription(admin, subscription.id)) {
+				break;
+			}
+
 			const serversQuantity = getSubscriptionServersQuantity(
 				subscription?.items?.data ?? [],
 			);
+			// Restores an id cleared by an old subscription's deletion.
 			await db
 				.update(user)
-				.set({ serversQuantity })
-				.where(eq(user.stripeCustomerId, subscription.customer as string));
+				.set({ serversQuantity, stripeSubscriptionId: subscription.id })
+				.where(eq(user.id, admin.id));
 
 			await updateServersBasedOnQuantity(admin.id, serversQuantity);
 
@@ -313,6 +333,10 @@ export default async function handler(
 					return res.status(400).send("Webhook Error: Admin not found");
 				}
 
+				if (isReplacedSubscription(admin, subscription.id)) {
+					break;
+				}
+
 				if (admin.sendInvoiceNotifications) {
 					await sendPaymentFailedEmail(newInvoice, admin);
 				}
@@ -322,7 +346,7 @@ export default async function handler(
 					.set({
 						serversQuantity: 0,
 					})
-					.where(eq(user.stripeCustomerId, newInvoice.customer as string));
+					.where(eq(user.id, admin.id));
 
 				await disableServers(admin.id);
 			}
@@ -378,6 +402,20 @@ const findUserByStripeCustomerId = async (stripeCustomerId: string) => {
 	});
 	return userResult;
 };
+
+// Late events of an ended subscription must not make it current again.
+const hasEnded = (subscription: Stripe.Subscription) =>
+	subscription.status === "canceled" ||
+	subscription.status === "incomplete_expired" ||
+	subscription.status === "unpaid";
+
+// A customer can hold several subscriptions; only the one stored on the
+// owner may change their plan and servers.
+const isReplacedSubscription = (
+	admin: { stripeSubscriptionId: string | null },
+	subscriptionId: string,
+) =>
+	!!admin.stripeSubscriptionId && admin.stripeSubscriptionId !== subscriptionId;
 
 const getInvoiceSubscriptionId = (invoice: Stripe.Invoice): string | null => {
 	const subscription = invoice.subscription;
