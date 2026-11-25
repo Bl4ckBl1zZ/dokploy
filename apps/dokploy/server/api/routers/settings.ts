@@ -89,6 +89,7 @@ import {
 	createTRPCRouter,
 	protectedProcedure,
 	publicProcedure,
+	requireSensitiveVerification,
 	withPermission,
 } from "../trpc";
 
@@ -246,6 +247,7 @@ export const settingsRouter = createTRPCRouter({
 			return true;
 		}),
 	cleanUnusedVolumes: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(apiServerSchema)
 		.mutation(async ({ input, ctx }) => {
 			await assertServerAccess(ctx.session, input?.serverId);
@@ -281,6 +283,7 @@ export const settingsRouter = createTRPCRouter({
 			});
 		}),
 	cleanDockerPrune: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(apiServerSchema)
 		.mutation(async ({ input, ctx }) => {
 			await assertServerAccess(ctx.session, input?.serverId);
@@ -294,6 +297,7 @@ export const settingsRouter = createTRPCRouter({
 			return true;
 		}),
 	cleanAll: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(apiServerSchema)
 		.mutation(async ({ input, ctx }) => {
 			await assertServerAccess(ctx.session, input?.serverId);
@@ -326,6 +330,7 @@ export const settingsRouter = createTRPCRouter({
 		return getDockerDiskUsage();
 	}),
 	saveSSHPrivateKey: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(apiSaveSSHKey)
 		.mutation(async ({ input, ctx }) => {
 			if (IS_CLOUD) {
@@ -384,20 +389,22 @@ export const settingsRouter = createTRPCRouter({
 			});
 			return settings;
 		}),
-	cleanSSHPrivateKey: adminProcedure.mutation(async ({ ctx }) => {
-		if (IS_CLOUD) {
+	cleanSSHPrivateKey: adminProcedure
+		.use(requireSensitiveVerification)
+		.mutation(async ({ ctx }) => {
+			if (IS_CLOUD) {
+				return true;
+			}
+			await updateWebServerSettings({
+				sshPrivateKey: null,
+			});
+			await audit(ctx, {
+				action: "delete",
+				resourceType: "settings",
+				resourceName: "ssh-private-key",
+			});
 			return true;
-		}
-		await updateWebServerSettings({
-			sshPrivateKey: null,
-		});
-		await audit(ctx, {
-			action: "delete",
-			resourceType: "settings",
-			resourceName: "ssh-private-key",
-		});
-		return true;
-	}),
+		}),
 	updateDockerCleanup: adminProcedure
 		.input(apiUpdateDockerCleanup)
 		.mutation(async ({ input, ctx }) => {
@@ -528,6 +535,7 @@ export const settingsRouter = createTRPCRouter({
 		}),
 
 	updateEnforceSSO: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(z.object({ enforceSSO: z.boolean() }))
 		.mutation(async ({ input, ctx }) => {
 			if (IS_CLOUD) {

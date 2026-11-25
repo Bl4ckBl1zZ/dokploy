@@ -91,7 +91,11 @@ import {
 import { cancelDeployment, deploy } from "@/server/utils/deploy";
 import { containerBelongsToService } from "@/server/wss/container-ownership";
 import { generatePassword } from "@/templates/utils";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
+import {
+	createTRPCRouter,
+	protectedProcedure,
+	requireSensitiveVerification,
+} from "../trpc";
 import { audit } from "../utils/audit";
 
 export const composeRouter = createTRPCRouter({
@@ -248,6 +252,7 @@ export const composeRouter = createTRPCRouter({
 			return true;
 		}),
 	delete: protectedProcedure
+		.use(requireSensitiveVerification)
 		.input(apiDeleteCompose)
 		.mutation(async ({ input, ctx }) => {
 			await checkServiceAccess(ctx, input.composeId, "delete");
@@ -1237,17 +1242,20 @@ export const composeRouter = createTRPCRouter({
 				);
 			}
 
-			const { accessedServices } = await findMemberByUserId(
+			const member = await findMemberByUserId(
 				ctx.user.id,
 				ctx.session.activeOrganizationId,
 			);
-			if (accessedServices.length === 0) return { items: [], total: 0 };
-			baseConditions.push(
-				sql`${composeTable.composeId} IN (${sql.join(
-					accessedServices.map((id) => sql`${id}`),
-					sql`, `,
-				)})`,
-			);
+			if (member.role !== "owner" && member.role !== "admin") {
+				if (member.accessedServices.length === 0)
+					return { items: [], total: 0 };
+				baseConditions.push(
+					sql`${composeTable.composeId} IN (${sql.join(
+						member.accessedServices.map((id) => sql`${id}`),
+						sql`, `,
+					)})`,
+				);
+			}
 
 			const where = and(...baseConditions);
 

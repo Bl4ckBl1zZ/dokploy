@@ -7,7 +7,10 @@ import {
 	requestToHeaders,
 } from "@dokploy/server/index";
 import { auth } from "@dokploy/server/lib/auth";
-import { invalidateTrustedOriginsCache } from "@dokploy/server/services/admin";
+import {
+	getInstanceOwnerId,
+	invalidateTrustedOriginsCache,
+} from "@dokploy/server/services/admin";
 import { getWebServerSettings } from "@dokploy/server/services/web-server-settings";
 import { TRPCError } from "@trpc/server";
 import { and, asc, eq } from "drizzle-orm";
@@ -16,6 +19,7 @@ import {
 	adminProcedure,
 	createTRPCRouter,
 	publicProcedure,
+	requireSensitiveVerification,
 } from "@/server/api/trpc";
 
 export const ssoRouter = createTRPCRouter({
@@ -87,6 +91,7 @@ export const ssoRouter = createTRPCRouter({
 			return provider;
 		}),
 	update: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(ssoProviderBodySchema)
 		.mutation(async ({ ctx, input }) => {
 			const existing = await db.query.ssoProvider.findFirst({
@@ -195,6 +200,7 @@ export const ssoRouter = createTRPCRouter({
 			return { success: true };
 		}),
 	deleteProvider: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(z.object({ providerId: z.string().min(1) }))
 		.mutation(async ({ ctx, input }) => {
 			const providerToDelete = await db.query.ssoProvider.findFirst({
@@ -238,6 +244,7 @@ export const ssoRouter = createTRPCRouter({
 			return { success: true };
 		}),
 	register: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(ssoProviderBodySchema)
 		.mutation(async ({ ctx, input }) => {
 			const organizationId = ctx.session.activeOrganizationId;
@@ -275,6 +282,7 @@ export const ssoRouter = createTRPCRouter({
 			return { success: true };
 		}),
 	addTrustedOrigin: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(z.object({ origin: z.string().min(1) }))
 		.mutation(async ({ ctx, input }) => {
 			const ownerId = await getOrganizationOwnerId(
@@ -304,6 +312,7 @@ export const ssoRouter = createTRPCRouter({
 			return { success: true };
 		}),
 	removeTrustedOrigin: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(z.object({ origin: z.string().min(1) }))
 		.mutation(async ({ ctx, input }) => {
 			const ownerId = await getOrganizationOwnerId(
@@ -332,6 +341,7 @@ export const ssoRouter = createTRPCRouter({
 			return { success: true };
 		}),
 	updateTrustedOrigin: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(
 			z.object({
 				oldOrigin: z.string().min(1),

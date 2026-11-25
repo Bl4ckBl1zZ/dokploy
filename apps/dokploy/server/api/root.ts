@@ -33,6 +33,7 @@ import { networkRouter } from "./routers/network";
 import { notificationRouter } from "./routers/notification";
 import { organizationRouter } from "./routers/organization";
 import { overviewRouter } from "./routers/overview";
+import { ownershipTransferRouter } from "./routers/ownership-transfer";
 import { patchRouter } from "./routers/patch";
 import { portRouter } from "./routers/port";
 import { postgresRouter } from "./routers/postgres";
@@ -47,6 +48,7 @@ import { sandboxRouter } from "./routers/sandbox";
 import { scheduleRouter } from "./routers/schedule";
 import { scimRouter } from "./routers/scim";
 import { securityRouter } from "./routers/security";
+import { sensitiveActionRouter } from "./routers/sensitive-action";
 import { serverRouter } from "./routers/server";
 import { serverSecurityRouter } from "./routers/server-security";
 import { settingsRouter } from "./routers/settings";
@@ -115,6 +117,8 @@ export const appRouter = createTRPCRouter({
 	vaultProvider: vaultProviderRouter,
 	ai: aiRouter,
 	organization: organizationRouter,
+	ownershipTransfer: ownershipTransferRouter,
+	sensitiveAction: sensitiveActionRouter,
 	sso: ssoRouter,
 	scim: scimRouter,
 	forwardAuth: forwardAuthRouter,

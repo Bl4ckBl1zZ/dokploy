@@ -35,7 +35,11 @@ import { TRPCError } from "@trpc/server";
 import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { quote } from "shell-quote";
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import {
+	createTRPCRouter,
+	protectedProcedure,
+	requireSensitiveVerification,
+} from "@/server/api/trpc";
 import { audit } from "@/server/api/utils/audit";
 import {
 	apiChangeRedisStatus,
@@ -319,6 +323,7 @@ export const redisRouter = createTRPCRouter({
 			return mongo;
 		}),
 	remove: protectedProcedure
+		.use(requireSensitiveVerification)
 		.input(apiFindOneRedis)
 		.mutation(async ({ input, ctx }) => {
 			await checkServiceAccess(ctx, input.redisId, "delete");
@@ -562,17 +567,20 @@ export const redisRouter = createTRPCRouter({
 					ilike(redisTable.description ?? "", `%${input.description.trim()}%`),
 				);
 			}
-			const { accessedServices } = await findMemberByUserId(
+			const member = await findMemberByUserId(
 				ctx.user.id,
 				ctx.session.activeOrganizationId,
 			);
-			if (accessedServices.length === 0) return { items: [], total: 0 };
-			baseConditions.push(
-				sql`${redisTable.redisId} IN (${sql.join(
-					accessedServices.map((id) => sql`${id}`),
-					sql`, `,
-				)})`,
-			);
+			if (member.role !== "owner" && member.role !== "admin") {
+				if (member.accessedServices.length === 0)
+					return { items: [], total: 0 };
+				baseConditions.push(
+					sql`${redisTable.redisId} IN (${sql.join(
+						member.accessedServices.map((id) => sql`${id}`),
+						sql`, `,
+					)})`,
+				);
+			}
 
 			const where = and(...baseConditions);
 			const [items, countResult] = await Promise.all([

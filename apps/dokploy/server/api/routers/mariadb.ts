@@ -37,7 +37,11 @@ import { observable } from "@trpc/server/observable";
 import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { quote } from "shell-quote";
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import {
+	createTRPCRouter,
+	protectedProcedure,
+	requireSensitiveVerification,
+} from "@/server/api/trpc";
 import { audit } from "@/server/api/utils/audit";
 import {
 	apiChangeMariaDBStatus,
@@ -276,6 +280,7 @@ export const mariadbRouter = createTRPCRouter({
 			return mongo;
 		}),
 	remove: protectedProcedure
+		.use(requireSensitiveVerification)
 		.input(apiFindOneMariaDB)
 		.mutation(async ({ input, ctx }) => {
 			await checkServiceAccess(ctx, input.mariadbId, "delete");
@@ -564,17 +569,20 @@ export const mariadbRouter = createTRPCRouter({
 					),
 				);
 			}
-			const { accessedServices } = await findMemberByUserId(
+			const member = await findMemberByUserId(
 				ctx.user.id,
 				ctx.session.activeOrganizationId,
 			);
-			if (accessedServices.length === 0) return { items: [], total: 0 };
-			baseConditions.push(
-				sql`${mariadbTable.mariadbId} IN (${sql.join(
-					accessedServices.map((id) => sql`${id}`),
-					sql`, `,
-				)})`,
-			);
+			if (member.role !== "owner" && member.role !== "admin") {
+				if (member.accessedServices.length === 0)
+					return { items: [], total: 0 };
+				baseConditions.push(
+					sql`${mariadbTable.mariadbId} IN (${sql.join(
+						member.accessedServices.map((id) => sql`${id}`),
+						sql`, `,
+					)})`,
+				);
+			}
 
 			const where = and(...baseConditions);
 			const [items, countResult] = await Promise.all([

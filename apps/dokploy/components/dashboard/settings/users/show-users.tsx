@@ -27,6 +27,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { authClient } from "@/lib/auth-client";
+import { withSensitiveVerification } from "@/lib/sensitive-action";
 import { api } from "@/utils/api";
 import { AddUserPermissions } from "./add-permissions";
 import { ChangeRole } from "./change-role";
@@ -278,10 +279,14 @@ export const ShowUsers = () => {
 																						}
 
 																						const { error } =
-																							await authClient.organization.removeMember(
-																								{
-																									memberIdOrEmail: member.id,
-																								},
+																							await withSensitiveVerification(
+																								() =>
+																									authClient.organization.removeMember(
+																										{
+																											memberIdOrEmail:
+																												member.id,
+																										},
+																									),
 																							);
 
 																						if (!error) {
@@ -291,7 +296,8 @@ export const ShowUsers = () => {
 																							refetch();
 																						} else {
 																							toast.error(
-																								"Error unlinking user",
+																								error.message ||
+																									"Error unlinking user",
 																							);
 																						}
 																					}}

@@ -9,12 +9,20 @@
 
 // import { getServerAuthSession } from "@/server/auth";
 import { db } from "@dokploy/server/db";
+import {
+	IS_CLOUD,
+	isInstanceOwner,
+} from "@dokploy/server/index";
 import type { statements } from "@dokploy/server/lib/access-control";
 import { validateRequest } from "@dokploy/server/lib/auth";
 import {
 	checkPermission,
 	resolvePermissions,
 } from "@dokploy/server/services/permission";
+import {
+	isSensitiveActionAllowed,
+	SENSITIVE_VERIFICATION_REQUIRED,
+} from "@dokploy/server/services/sensitive-action";
 import type { OpenApiMeta } from "@dokploy/trpc-openapi";
 import { initTRPC, TRPCError } from "@trpc/server";
 import type { CreateNextContextOptions } from "@trpc/server/adapters/next";
@@ -207,6 +215,44 @@ export const adminProcedure = t.procedure.use(({ ctx, next }) => {
 		},
 	});
 });
+
+export const selfHostedProcedure = protectedProcedure.use(({ next }) => {
+	if (IS_CLOUD) {
+		throw new TRPCError({
+			code: "BAD_REQUEST",
+			message: "This is not available on Dokploy Cloud",
+		});
+	}
+	return next();
+});
+
+export const instanceOwnerProcedure = selfHostedProcedure.use(
+	async ({ ctx, next }) => {
+		if (!(await isInstanceOwner(ctx.user.id))) {
+			throw new TRPCError({
+				code: "FORBIDDEN",
+				message: "Only the instance owner can do this",
+			});
+		}
+		return next();
+	},
+);
+
+export const requireSensitiveVerification = t.middleware(
+	async ({ ctx, next }) => {
+		const allowed = await isSensitiveActionAllowed({
+			sessionId: ctx.session?.id,
+			isApiKeyRequest: !!ctx.req?.headers?.["x-api-key"],
+		});
+		if (!allowed) {
+			throw new TRPCError({
+				code: "FORBIDDEN",
+				message: SENSITIVE_VERIFICATION_REQUIRED,
+			});
+		}
+		return next();
+	},
+);
 
 /**
  * Permission-checked procedure factory.

@@ -28,6 +28,7 @@ import { TRPCError } from "@trpc/server";
 import {
 	adminProcedure,
 	createTRPCRouter,
+	requireSensitiveVerification,
 	withPermission,
 } from "@/server/api/trpc";
 import { audit } from "@/server/api/utils/audit";
@@ -60,6 +61,7 @@ export const forwardAuthRouter = createTRPCRouter({
 		}),
 
 	setAuthDomain: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(apiSetForwardAuthSettings)
 		.mutation(async ({ ctx, input }) => {
 			if (input.serverId) {
@@ -89,6 +91,7 @@ export const forwardAuthRouter = createTRPCRouter({
 		}),
 
 	removeAuthDomain: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(apiForwardAuthServerTarget)
 		.mutation(async ({ ctx, input }) => {
 			if (input.serverId) {
@@ -145,6 +148,7 @@ export const forwardAuthRouter = createTRPCRouter({
 		}),
 
 	removeOnServer: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(apiForwardAuthServerTarget)
 		.mutation(async ({ ctx, input }) => {
 			if (input.serverId) {
@@ -171,6 +175,7 @@ export const forwardAuthRouter = createTRPCRouter({
 		.query(({ ctx, input }) => getDomainSsoStatus(ctx, input.domainId)),
 
 	enable: withPermission("domain", "create")
+		.use(requireSensitiveVerification)
 		.input(apiForwardAuthDomainTarget)
 		.mutation(async ({ ctx, input }) => {
 			const domain = await assertApplicationDomainAccess(
@@ -191,6 +196,7 @@ export const forwardAuthRouter = createTRPCRouter({
 		}),
 
 	disable: withPermission("domain", "create")
+		.use(requireSensitiveVerification)
 		.input(apiForwardAuthDomainTarget)
 		.mutation(async ({ ctx, input }) => {
 			const domain = await assertApplicationDomainAccess(
@@ -227,6 +233,7 @@ export const forwardAuthRouter = createTRPCRouter({
 		}),
 
 	setAllowlist: withPermission("domain", "create")
+		.use(requireSensitiveVerification)
 		.input(apiSetSsoAllowlist)
 		.mutation(async ({ ctx, input }) => {
 			await checkServicePermissionAndAccess(ctx, input.applicationId, {

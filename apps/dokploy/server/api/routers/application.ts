@@ -59,6 +59,7 @@ import { zfd } from "zod-form-data";
 import {
 	createTRPCRouter,
 	protectedProcedure,
+	requireSensitiveVerification,
 	withPermission,
 } from "@/server/api/trpc";
 import { audit } from "@/server/api/utils/audit";
@@ -357,6 +358,7 @@ export const applicationRouter = createTRPCRouter({
 		}),
 
 	delete: protectedProcedure
+		.use(requireSensitiveVerification)
 		.input(apiFindOneApplication)
 		.mutation(async ({ input, ctx }) => {
 			await checkServiceAccess(ctx, input.applicationId, "delete");
@@ -1254,17 +1256,20 @@ export const applicationRouter = createTRPCRouter({
 				);
 			}
 
-			const { accessedServices } = await findMemberByUserId(
+			const member = await findMemberByUserId(
 				ctx.user.id,
 				ctx.session.activeOrganizationId,
 			);
-			if (accessedServices.length === 0) return { items: [], total: 0 };
-			baseConditions.push(
-				sql`${applications.applicationId} IN (${sql.join(
-					accessedServices.map((id) => sql`${id}`),
-					sql`, `,
-				)})`,
-			);
+			if (member.role !== "owner" && member.role !== "admin") {
+				if (member.accessedServices.length === 0)
+					return { items: [], total: 0 };
+				baseConditions.push(
+					sql`${applications.applicationId} IN (${sql.join(
+						member.accessedServices.map((id) => sql`${id}`),
+						sql`, `,
+					)})`,
+				);
+			}
 
 			const where = and(...baseConditions);
 
