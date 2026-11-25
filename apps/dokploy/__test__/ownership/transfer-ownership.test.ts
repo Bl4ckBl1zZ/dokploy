@@ -10,16 +10,10 @@ let ownedOrganizations = [
 let newOwnerMemberOf = ["org-1"];
 
 const previousOwnerFields = {
-	enableEnterpriseFeatures: true,
-	licenseKey: "license-123",
-	isValidEnterpriseLicense: true,
 	trustedOrigins: ["https://sso.example.com"],
 	enablePaidFeatures: true,
 };
 const emptyOwnerFields = {
-	enableEnterpriseFeatures: false,
-	licenseKey: null,
-	isValidEnterpriseLicense: false,
 	trustedOrigins: null,
 	enablePaidFeatures: false,
 };
@@ -110,10 +104,6 @@ vi.mock("@dokploy/server/db", async () => {
 		},
 	};
 });
-
-vi.mock("@dokploy/server/services/proprietary/license-key", () => ({
-	hasValidLicense: vi.fn(async () => false),
-}));
 
 const schema = await import("@dokploy/server/db/schema");
 const {
@@ -332,7 +322,7 @@ describe("transferInstanceOwnership", () => {
 		).toHaveLength(0);
 	});
 
-	it("moves license and trusted origins to the new owner", async () => {
+	it("moves trusted origins and paid features to the new owner", async () => {
 		await transferInstanceOwnership("owner", "target");
 
 		expect(writesTo(schema.user)).toEqual([
@@ -341,65 +331,19 @@ describe("transferInstanceOwnership", () => {
 		]);
 	});
 
-	it("keeps the new owner's own license when the previous owner has none", async () => {
+	it("merges both owners' trusted origins and keeps the new owner's paid features", async () => {
 		ownerRows = [
 			{ ...emptyOwnerFields, trustedOrigins: ["https://old.example.com"] },
 			{
-				enableEnterpriseFeatures: true,
-				licenseKey: "their-license",
-				isValidEnterpriseLicense: true,
 				trustedOrigins: ["https://new.example.com"],
-				enablePaidFeatures: false,
+				enablePaidFeatures: true,
 			},
 		];
 		await transferInstanceOwnership("owner", "target");
 
 		expect(writesTo(schema.user)[0]?.values).toEqual({
-			enableEnterpriseFeatures: true,
-			licenseKey: "their-license",
-			isValidEnterpriseLicense: true,
 			trustedOrigins: ["https://new.example.com", "https://old.example.com"],
-			enablePaidFeatures: false,
-		});
-	});
-
-	it("keeps the new owner's valid license over the previous owner's invalid one", async () => {
-		ownerRows = [
-			{
-				...previousOwnerFields,
-				licenseKey: "expired-key",
-				isValidEnterpriseLicense: false,
-			},
-			{
-				enableEnterpriseFeatures: true,
-				licenseKey: "their-license",
-				isValidEnterpriseLicense: true,
-				trustedOrigins: null,
-				enablePaidFeatures: false,
-			},
-		];
-		await transferInstanceOwnership("owner", "target");
-
-		expect(writesTo(schema.user)[0]?.values).toMatchObject({
-			licenseKey: "their-license",
-			isValidEnterpriseLicense: true,
-		});
-	});
-
-	it("keeps the previous owner's key when neither license is valid", async () => {
-		ownerRows = [
-			{
-				...previousOwnerFields,
-				licenseKey: "needs-revalidation",
-				isValidEnterpriseLicense: false,
-			},
-			emptyOwnerFields,
-		];
-		await transferInstanceOwnership("owner", "target");
-
-		expect(writesTo(schema.user)[0]?.values).toMatchObject({
-			licenseKey: "needs-revalidation",
-			isValidEnterpriseLicense: false,
+			enablePaidFeatures: true,
 		});
 	});
 
