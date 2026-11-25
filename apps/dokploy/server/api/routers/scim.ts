@@ -6,8 +6,8 @@ import { TRPCError } from "@trpc/server";
 import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import {
-	createTRPCRouter,
 	adminProcedure,
+	createTRPCRouter,
 	requireSensitiveVerification,
 } from "@/server/api/trpc";
 

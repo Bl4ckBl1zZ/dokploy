@@ -7,10 +7,7 @@ import {
 	requestToHeaders,
 } from "@dokploy/server/index";
 import { auth } from "@dokploy/server/lib/auth";
-import {
-	getInstanceOwnerId,
-	invalidateTrustedOriginsCache,
-} from "@dokploy/server/services/admin";
+import { invalidateTrustedOriginsCache } from "@dokploy/server/services/admin";
 import { getWebServerSettings } from "@dokploy/server/services/web-server-settings";
 import { TRPCError } from "@trpc/server";
 import { and, asc, eq } from "drizzle-orm";

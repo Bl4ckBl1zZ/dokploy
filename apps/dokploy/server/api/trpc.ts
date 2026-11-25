@@ -9,10 +9,7 @@
 
 // import { getServerAuthSession } from "@/server/auth";
 import { db } from "@dokploy/server/db";
-import {
-	IS_CLOUD,
-	isInstanceOwner,
-} from "@dokploy/server/index";
+import { IS_CLOUD, isInstanceOwner } from "@dokploy/server/index";
 import type { statements } from "@dokploy/server/lib/access-control";
 import { validateRequest } from "@dokploy/server/lib/auth";
 import {
