@@ -5,7 +5,11 @@ import { auth } from "@dokploy/server/lib/auth";
 import { TRPCError } from "@trpc/server";
 import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { adminProcedure, createTRPCRouter } from "@/server/api/trpc";
+import {
+	adminProcedure,
+	createTRPCRouter,
+	requireSensitiveVerification,
+} from "@/server/api/trpc";
 
 const providerIdSchema = z
 	.string()
@@ -30,6 +34,7 @@ export const scimRouter = createTRPCRouter({
 		return providers;
 	}),
 	generateToken: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(z.object({ providerId: providerIdSchema }))
 		.mutation(async ({ ctx, input }) => {
 			const existing = await db.query.scimProvider.findFirst({
@@ -52,6 +57,7 @@ export const scimRouter = createTRPCRouter({
 			return { scimToken: result.scimToken, providerId: input.providerId };
 		}),
 	deleteProvider: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(z.object({ providerId: providerIdSchema }))
 		.mutation(async ({ ctx, input }) => {
 			const [deleted] = await db

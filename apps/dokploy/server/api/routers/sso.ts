@@ -16,6 +16,7 @@ import {
 	adminProcedure,
 	createTRPCRouter,
 	publicProcedure,
+	requireSensitiveVerification,
 } from "@/server/api/trpc";
 
 export const ssoRouter = createTRPCRouter({
@@ -87,6 +88,7 @@ export const ssoRouter = createTRPCRouter({
 			return provider;
 		}),
 	update: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(ssoProviderBodySchema)
 		.mutation(async ({ ctx, input }) => {
 			const existing = await db.query.ssoProvider.findFirst({
@@ -195,6 +197,7 @@ export const ssoRouter = createTRPCRouter({
 			return { success: true };
 		}),
 	deleteProvider: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(z.object({ providerId: z.string().min(1) }))
 		.mutation(async ({ ctx, input }) => {
 			const providerToDelete = await db.query.ssoProvider.findFirst({
@@ -238,6 +241,7 @@ export const ssoRouter = createTRPCRouter({
 			return { success: true };
 		}),
 	register: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(ssoProviderBodySchema)
 		.mutation(async ({ ctx, input }) => {
 			const organizationId = ctx.session.activeOrganizationId;
@@ -275,6 +279,7 @@ export const ssoRouter = createTRPCRouter({
 			return { success: true };
 		}),
 	addTrustedOrigin: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(z.object({ origin: z.string().min(1) }))
 		.mutation(async ({ ctx, input }) => {
 			const ownerId = await getOrganizationOwnerId(
@@ -304,6 +309,7 @@ export const ssoRouter = createTRPCRouter({
 			return { success: true };
 		}),
 	removeTrustedOrigin: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(z.object({ origin: z.string().min(1) }))
 		.mutation(async ({ ctx, input }) => {
 			const ownerId = await getOrganizationOwnerId(
@@ -332,6 +338,7 @@ export const ssoRouter = createTRPCRouter({
 			return { success: true };
 		}),
 	updateTrustedOrigin: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(
 			z.object({
 				oldOrigin: z.string().min(1),

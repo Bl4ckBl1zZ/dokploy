@@ -10,7 +10,12 @@ import { DOMAIN_PATTERN_REGEX } from "@dokploy/server/services/permission";
 import { TRPCError } from "@trpc/server";
 import { and, count, eq } from "drizzle-orm";
 import { z } from "zod";
-import { adminProcedure, createTRPCRouter, protectedProcedure } from "../trpc";
+import {
+	adminProcedure,
+	createTRPCRouter,
+	protectedProcedure,
+	requireSensitiveVerification,
+} from "../trpc";
 import { audit } from "../utils/audit";
 
 const permissionsSchema = z.record(z.string(), z.array(z.string()));
@@ -100,6 +105,7 @@ export const customRoleRouter = createTRPCRouter({
 	}),
 
 	create: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(
 			z.object({
 				roleName: z
@@ -164,6 +170,7 @@ export const customRoleRouter = createTRPCRouter({
 		}),
 
 	update: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(
 			z.object({
 				roleName: z.string().min(1),
@@ -282,6 +289,7 @@ export const customRoleRouter = createTRPCRouter({
 		}),
 
 	remove: adminProcedure
+		.use(requireSensitiveVerification)
 		.input(
 			z.object({
 				roleName: z.string().min(1),

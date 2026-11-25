@@ -1324,6 +1324,13 @@
       "when": 1795264739652,
       "tag": "0188_spooky_joshua_kane",
       "breakpoints": true
+    },
+    {
+      "idx": 189,
+      "version": "7",
+      "when": 1795610392770,
+      "tag": "0189_spotty_nightshade",
+      "breakpoints": true
     }
   ]
 }

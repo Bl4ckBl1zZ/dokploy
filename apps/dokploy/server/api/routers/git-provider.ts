@@ -11,6 +11,7 @@ import { desc, eq, inArray } from "drizzle-orm";
 import {
 	createTRPCRouter,
 	protectedProcedure,
+	requireSensitiveVerification,
 	withPermission,
 } from "@/server/api/trpc";
 import { audit } from "@/server/api/utils/audit";
@@ -84,6 +85,7 @@ export const gitProviderRouter = createTRPCRouter({
 	}),
 
 	toggleShare: protectedProcedure
+		.use(requireSensitiveVerification)
 		.input(apiToggleShareGitProvider)
 		.mutation(async ({ input, ctx }) => {
 			const provider = await findGitProviderById(input.gitProviderId);
@@ -125,6 +127,7 @@ export const gitProviderRouter = createTRPCRouter({
 	),
 
 	remove: withPermission("gitProviders", "delete")
+		.use(requireSensitiveVerification)
 		.input(apiRemoveGitProvider)
 		.mutation(async ({ input, ctx }) => {
 			try {
