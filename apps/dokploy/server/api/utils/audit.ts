@@ -69,7 +69,6 @@ export const SENSITIVE_QUERY_PATHS = new Set([
 	"environment.one",
 	"environment.byProjectId",
 	"backup.one",
-	"licenseKey.getEnterpriseSettings",
 	"project.one",
 	"docker.readContainerFile",
 	"docker.getConfig",
