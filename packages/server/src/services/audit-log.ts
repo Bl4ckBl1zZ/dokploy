@@ -1,6 +1,10 @@
 import { db } from "@dokploy/server/db";
 import type { AuditAction, AuditResourceType } from "@dokploy/server/db/schema";
 import { auditLog } from "@dokploy/server/db/schema";
+import {
+	emitAuditEvent,
+	redactAuditValue,
+} from "@dokploy/server/lib/audit-stream";
 import { and, desc, eq, gte, ilike, lte } from "drizzle-orm";
 
 export type { AuditAction, AuditResourceType };
@@ -15,6 +19,7 @@ export interface CreateAuditLogInput {
 	resourceId?: string;
 	resourceName?: string;
 	metadata?: Record<string, unknown>;
+	requestId?: string;
 }
 
 /**
@@ -22,6 +27,11 @@ export interface CreateAuditLogInput {
  * so a logging failure never breaks the main operation.
  */
 export const createAuditLog = async (input: CreateAuditLogInput) => {
+	emitAuditEvent({
+		source: "domain",
+		...input,
+		metadata: redactAuditValue(input.metadata),
+	});
 	try {
 		await db.insert(auditLog).values({
 			organizationId: input.organizationId,

@@ -18,6 +18,7 @@ import {
 import { config } from "dotenv";
 import next from "next";
 import packageInfo from "../package.json";
+import { auditHttpRequest } from "./utils/http-audit";
 import { initInactiveAccountsJob } from "./utils/inactive-accounts";
 import { initOnboardingEmailJobs } from "./utils/onboarding-emails";
 import { setupDockerContainerLogsWebSocketServer } from "./wss/docker-container-logs";
@@ -48,6 +49,7 @@ void app.prepare().then(async () => {
 	try {
 		console.log("Running DokployVersion: ", packageInfo.version);
 		const server = http.createServer((req, res) => {
+			auditHttpRequest(req, res);
 			handle(req, res);
 		});
 
